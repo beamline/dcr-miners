@@ -40,7 +40,6 @@ public class DcrVisualizerTester extends AbstractMiner {
 	public DcrModel getModel() {
 		DcrModel model = new DcrModel();
 		
-		
 		model.addRelation("Start", "Activity 3", DcrModel.RELATION.CONDITION);
 		model.addRelation("Start", "Activity 2", DcrModel.RELATION.RESPONSE);
 		model.addRelation("Activity 3", "Activity 2", DcrModel.RELATION.RESPONSE);
