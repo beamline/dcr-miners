@@ -21,20 +21,19 @@
 	
 	<repositories>
 		<repository>
-			<id>beamline</id>
-			<name></name>
-			<url>https://dl.bintray.com/delas/beamline</url>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
 		</repository>
 	</repositories>
 	
 	<dependencies>
 		<dependency>
-			<groupId>beamline</groupId>
+			<groupId>com.github.beamline</groupId>
 			<artifactId>core</artifactId>
-			<version>0.0.12</version>
+			<version>0.0.16</version>
 		</dependency>
 		<dependency>
-			<groupId>beamline</groupId>
+			<groupId>com.github.beamline</groupId>
 			<artifactId>graphviz</artifactId>
 			<version>0.0.1</version>
 		</dependency>

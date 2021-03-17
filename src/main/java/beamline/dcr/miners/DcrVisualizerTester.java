@@ -13,12 +13,12 @@ import beamline.dcr.model.DcrModel;
 import beamline.dcr.view.DcrModelView;
 
 @ExposedMiner(
-	name = "DCR Miner",
+	name = "DCR visualization tester",
 	description = "This miner discovers a DCR model",
 	configurationParameters = { },
 	viewParameters = { }
 )
-public class DcrMiner extends AbstractMiner {
+public class DcrVisualizerTester extends AbstractMiner {
 
 	@Override
 	public void configure(Collection<MinerParameterValue> collection) {
