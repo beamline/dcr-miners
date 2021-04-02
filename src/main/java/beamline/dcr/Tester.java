@@ -16,9 +16,13 @@ public class Tester {
 		sc.start();
 		
 		List<List<String>> traces = Arrays.asList(
-				Arrays.asList("A", "B"),
+				/**Arrays.asList("A", "B"),
 				Arrays.asList("A", "B", "D"),
-				Arrays.asList("A", "B", "C", "B")
+				Arrays.asList("B", "B", "C", "B"),
+				Arrays.asList("A", "A")**/
+				Arrays.asList("A","B","B","C","A","B","A","C","C"
+						,"D","C","D","D","E","F","D","E","F","F","E","E","D","E","C")
+
 		);
 		
 		int i = 0;

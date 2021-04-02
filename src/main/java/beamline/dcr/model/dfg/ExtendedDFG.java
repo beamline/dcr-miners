@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -44,7 +46,14 @@ public class ExtendedDFG {
 	public Set<Pair<String, String>> getRelations() {
 		return relations.keySet();
 	}
-	
+
+	public Set<Pair<String, String>> getRelationsAboveThreshold(int threshold){
+		return relations.entrySet().stream()
+				.filter(entry -> entry.getValue().getFrequency() > threshold)
+				.map(Map.Entry::getKey)
+				.collect(Collectors.toSet());
+
+	}
 	public ActivityDecoration getActivityDecoration(String activity) {
 		return this.activities.get(activity);
 	}

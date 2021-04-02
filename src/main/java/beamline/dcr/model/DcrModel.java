@@ -8,7 +8,17 @@ import org.apache.commons.lang3.tuple.Triple;
 public class DcrModel {
 
 	public enum RELATION {
-		CONDITION, RESPONSE, INCLUDE, EXCLUDE, SPAWN, MILESTONE
+		CONDITION,
+		RESPONSE,
+		INCLUDE,
+		EXCLUDE,
+		SPAWN,
+		MILESTONE,
+		IMMCONDITION,
+		IMMRESPONSE,
+		DIRECTLOOP,
+		SEQUENCE;
+
 	}
 	
 	private Set<Triple<String, String, RELATION>> relations = new HashSet<Triple<String, String, RELATION>>();
@@ -23,10 +33,24 @@ public class DcrModel {
 			activities.add(r.getLeft());
 			activities.add(r.getMiddle());
 		}
+
 		return activities;
+
+
 	}
 	
 	public Set<Triple<String, String, RELATION>> getRelations() {
 		return relations;
 	}
+
+	public boolean containsRelation(String source, String target, RELATION relation){
+		return relations.contains(Triple.of(source, target, relation));
+	}
+
+	public void removeRelation(String source, String target, RELATION relation){
+		relations.remove(Triple.of(source, target, relation));
+	}
+
+
+
 }
