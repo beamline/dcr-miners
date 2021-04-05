@@ -9,15 +9,26 @@ import java.util.Set;
 
 @ExposedDcrPattern(
         name = "ImmCond",
-        latticeLevel = 1
+        latticeLevel = 3
 )
 public class ImmediateCondition implements RelationPattern {
 
     @Override
     public void populateConstraint(UnionRelationSet unionRelationSet) {
-        Set<Pair<String, String>> DFGRelations = unionRelationSet.getDFGRelations();
 
-        for (Pair<String, String> relation : DFGRelations) {
+        Set<Pair<String, String>> dcrConditions =
+                unionRelationSet.getDcrRelationWithPattern(DcrModel.RELATION.CONDITION);
+
+        Set<Pair<String, String>> DFGRelations = unionRelationSet.getDFGRelations();
+        for (Pair<String, String> dcrCondition : dcrConditions){
+            if (DFGRelations.contains(dcrCondition)){
+                unionRelationSet.replaceDCRRelation(
+                        Triple.of(dcrCondition.getLeft(),dcrCondition.getRight(), DcrModel.RELATION.IMMCONDITION),
+                        Triple.of(dcrCondition.getLeft(),dcrCondition.getRight(), DcrModel.RELATION.CONDITION));
+            }
+        }
+
+        /*for (Pair<String, String> relation : DFGRelations) {
             String sourceActivity = relation.getLeft();
             double sourceAvgFO = unionRelationSet.getActivityDecoration(sourceActivity).getAverageFirstOccurrance();
             String targetActivity = relation.getRight();
@@ -26,6 +37,6 @@ public class ImmediateCondition implements RelationPattern {
 
                 unionRelationSet.addDcrRelation(Triple.of(sourceActivity, targetActivity, DcrModel.RELATION.IMMCONDITION));
             }
-        }
+        }*/
     }
 }

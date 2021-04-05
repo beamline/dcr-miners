@@ -39,6 +39,10 @@ public class UnionRelationSet {
         DcrRelations.remove(relation);
     }
 
+    public void replaceDCRRelation(Triple<String,String, DcrModel.RELATION> newRelation,Triple<String,String, DcrModel.RELATION> oldRelation){
+        removeDCRRelation(oldRelation);
+        addDcrRelation(newRelation);
+    }
     public boolean DCRRelationsContains(Triple<String,String, DcrModel.RELATION> relation){
         return DcrRelations.contains(relation);
     }
@@ -48,5 +52,9 @@ public class UnionRelationSet {
                 .filter(entry -> entry.getRight() == pattern)
                 .map(triple -> Pair.of(triple.getLeft(),triple.getMiddle()))
                 .collect(Collectors.toSet());
+    }
+
+    public String[] getUniqueActivities(){
+        return extendedDFG.getActivities().toArray(new String[0]);
     }
 }

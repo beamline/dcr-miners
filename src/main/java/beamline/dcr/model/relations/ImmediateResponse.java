@@ -10,13 +10,26 @@ import java.util.Set;
 
 @ExposedDcrPattern(
         name = "ImmResp",
-        latticeLevel = 2
+        latticeLevel = 3
 )
 public class ImmediateResponse implements RelationPattern {
 
     @Override
     public void populateConstraint(UnionRelationSet unionRelationSet) {
+
+        Set<Pair<String, String>> dcrResponses =
+                unionRelationSet.getDcrRelationWithPattern(DcrModel.RELATION.RESPONSE);
+
         Set<Pair<String, String>> DFGRelations = unionRelationSet.getDFGRelations();
+        for (Pair<String, String> dcrResponse : dcrResponses){
+            if (DFGRelations.contains(dcrResponse)){
+                unionRelationSet.replaceDCRRelation(
+                        Triple.of(dcrResponse.getLeft(),dcrResponse.getRight(), DcrModel.RELATION.IMMRESPONSE),
+                        Triple.of(dcrResponse.getLeft(),dcrResponse.getRight(), DcrModel.RELATION.RESPONSE));
+            }
+        }
+
+        /*Set<Pair<String, String>> DFGRelations = unionRelationSet.getDFGRelations();
 
         for (Pair<String, String> relation : DFGRelations) {
             String sourceActivity = relation.getLeft();
@@ -26,7 +39,7 @@ public class ImmediateResponse implements RelationPattern {
             if (sourceAvgInd < targetAvgInd) {
                 unionRelationSet.addDcrRelation(Triple.of(sourceActivity, targetActivity, DcrModel.RELATION.IMMRESPONSE));
             }
-        }
+        }*/
     }
 
 }

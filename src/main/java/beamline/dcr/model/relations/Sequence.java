@@ -10,7 +10,7 @@ import java.util.Set;
 
 @ExposedDcrPattern(
         name = "Sequence",
-        latticeLevel = 3
+        latticeLevel = 4
 )
 public class Sequence implements RelationPattern {
 

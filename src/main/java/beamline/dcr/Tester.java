@@ -16,7 +16,7 @@ public class Tester {
 	public static void main(String[] args) throws MinerException {
 		DFGBasedMiner sc = new DFGBasedMiner();
 
-		MinerParameterValue confParam = new MinerParameterValue("Max Lattice Level", 3);
+		MinerParameterValue confParam = new MinerParameterValue("Max Lattice Level", 4);
 		Collection<MinerParameterValue> coll = new ArrayList<>();
 		coll.add(confParam);
 		sc.configure(coll);
