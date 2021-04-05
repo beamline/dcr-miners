@@ -6,6 +6,7 @@ import beamline.dcr.model.UnionRelationSet;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+
 import java.util.Set;
 
 @ExposedDcrPattern(
@@ -14,14 +15,11 @@ import java.util.Set;
 )
 public class DirectLoop implements RelationPattern {
 
-    private String type = "DirectLoop";
-
     @Override
     public void populateConstraint(UnionRelationSet unionRelationSet) {
         Set<Pair<String, String>> DFGRelations = unionRelationSet.getDFGRelations();
 
         for (Pair<String, String> relation : DFGRelations) {
-
 
             String sourceActivity = relation.getLeft();
             String targetActivity = relation.getRight();
@@ -38,11 +36,6 @@ public class DirectLoop implements RelationPattern {
 
         }
 
-    }
-
-    @Override
-    public String getType() {
-        return type;
     }
 
 }

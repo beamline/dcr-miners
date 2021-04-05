@@ -5,14 +5,14 @@ import beamline.dcr.model.DcrModel;
 import beamline.dcr.model.UnionRelationSet;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+
 import java.util.Set;
 
 @ExposedDcrPattern(
-        name="ImmResp",
+        name = "ImmResp",
         latticeLevel = 2
 )
 public class ImmediateResponse implements RelationPattern {
-    private String type = "ImmResp";
 
     @Override
     public void populateConstraint(UnionRelationSet unionRelationSet) {
@@ -24,14 +24,9 @@ public class ImmediateResponse implements RelationPattern {
             String targetActivity = relation.getRight();
             double targetAvgInd = unionRelationSet.getActivityDecoration(targetActivity).getAverageIndex();
             if (sourceAvgInd < targetAvgInd) {
-
                 unionRelationSet.addDcrRelation(Triple.of(sourceActivity, targetActivity, DcrModel.RELATION.IMMRESPONSE));
             }
         }
     }
 
-    @Override
-    public String getType() {
-        return type;
-    }
 }

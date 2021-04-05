@@ -5,14 +5,14 @@ import beamline.dcr.model.DcrModel;
 import beamline.dcr.model.UnionRelationSet;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-
 import java.util.Set;
+
 @ExposedDcrPattern(
-        name="ImmCond",
-        latticeLevel = 2
+        name = "ImmCond",
+        latticeLevel = 1
 )
 public class ImmediateCondition implements RelationPattern {
-    private String type = "ImmCond";
+
     @Override
     public void populateConstraint(UnionRelationSet unionRelationSet) {
         Set<Pair<String, String>> DFGRelations = unionRelationSet.getDFGRelations();
@@ -28,10 +28,4 @@ public class ImmediateCondition implements RelationPattern {
             }
         }
     }
-
-    @Override
-    public String getType() {
-        return type;
-    }
-
 }

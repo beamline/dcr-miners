@@ -1,9 +1,12 @@
 package beamline.dcr;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import beamline.core.miner.exceptions.MinerException;
+import beamline.core.web.miner.models.MinerParameterValue;
 import beamline.core.web.miner.models.MinerView;
 import beamline.core.web.miner.models.Stream;
 import beamline.dcr.miners.DFGBasedMiner;
@@ -12,6 +15,11 @@ public class Tester {
 
 	public static void main(String[] args) throws MinerException {
 		DFGBasedMiner sc = new DFGBasedMiner();
+
+		MinerParameterValue confParam = new MinerParameterValue("Max Lattice Level", 3);
+		Collection<MinerParameterValue> coll = new ArrayList<>();
+		coll.add(confParam);
+		sc.configure(coll);
 		sc.setStream(new Stream("test", "localhost", ""));
 		sc.start();
 		

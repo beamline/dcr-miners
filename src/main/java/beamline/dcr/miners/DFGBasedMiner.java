@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import beamline.core.miner.AbstractMiner;
 import beamline.core.web.annotations.ExposedMiner;
+import beamline.core.web.annotations.ExposedMinerParameter;
+import beamline.core.web.miner.models.MinerParameter;
 import beamline.core.web.miner.models.MinerParameterValue;
 import beamline.core.web.miner.models.MinerView;
 import beamline.core.web.miner.models.MinerViewRaw;
@@ -23,7 +25,7 @@ import org.reflections.Reflections;
 @ExposedMiner(
         name = "DFG based DCR miner",
         description = "This miner discovers a DCR model form a DFG",
-        configurationParameters = {},
+        configurationParameters = {@ExposedMinerParameter(name = "Max Lattice Level", type = MinerParameter.Type.CHOICE, defaultValue = "1;2;3"),},
         viewParameters = {}
 )
 public class DFGBasedMiner extends AbstractMiner {
@@ -32,9 +34,16 @@ public class DFGBasedMiner extends AbstractMiner {
     private Map<String, Integer> indexInCase = new HashMap<String, Integer>();
     private Map<String, Set<String>> observedActivitiesInCase = new HashMap<String, Set<String>>();
     private ExtendedDFG extendedDFG = new ExtendedDFG();
+    private int maxLatticeLevel;
 
     @Override
     public void configure(Collection<MinerParameterValue> collection) {
+        for(MinerParameterValue v : collection) {
+            if (v.getName().equals("Max Lattice Level")) {
+                this.maxLatticeLevel = (int) v.getValue();
+
+            }
+        }
     }
 
     @Override
@@ -113,6 +122,7 @@ public class DFGBasedMiner extends AbstractMiner {
         Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(ExposedDcrPattern.class);
 
         Set<Class<RelationPattern>> prioritizedDcrSet = annotated.stream()
+                .filter(aClass -> aClass.getAnnotation(ExposedDcrPattern.class).latticeLevel() <= maxLatticeLevel )
                 .sorted(Comparator.comparing(
                         aClass -> aClass.getAnnotation(ExposedDcrPattern.class).latticeLevel())
                 )
