@@ -1,5 +1,6 @@
 package beamline.dcr.model;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,12 +20,15 @@ public class DcrModel {
 		DIRECTLOOP,
 		SEQUENCE;
 
+
 	}
+
+
 	
 	private Set<Triple<String, String, RELATION>> relations = new HashSet<Triple<String, String, RELATION>>();
 	
-	public void addRelation(String source, String target, RELATION relation) {
-		relations.add(Triple.of(source, target, relation));
+	public void addRelation(Set<Triple<String, String, RELATION>> setOfRelations) {
+		relations.addAll(setOfRelations);
 	}
 	
 	public Set<String> getActivities() {

@@ -15,8 +15,8 @@ public class Tester {
 
 	public static void main(String[] args) throws MinerException {
 		DFGBasedMiner sc = new DFGBasedMiner();
-
-		MinerParameterValue confParam = new MinerParameterValue("Max Lattice Level", 4);
+		String[] patternList = {"Sequence", "DirectLoop" ,"ImmCondition", "ImmResponse"};
+		MinerParameterValue confParam = new MinerParameterValue("DCR Patterns", patternList);
 		Collection<MinerParameterValue> coll = new ArrayList<>();
 		coll.add(confParam);
 		sc.configure(coll);
@@ -24,12 +24,12 @@ public class Tester {
 		sc.start();
 		
 		List<List<String>> traces = Arrays.asList(
-				/**Arrays.asList("A", "B"),
+				Arrays.asList("A", "B"),
 				Arrays.asList("A", "B", "D"),
 				Arrays.asList("B", "B", "C", "B"),
-				Arrays.asList("A", "A")**/
-				Arrays.asList("A","B","B","C","A","B","A","C","C"
-						,"D","C","D","D","E","F","D","E","F","F","E","E","D","E","C")
+				Arrays.asList("A", "A")
+				/*Arrays.asList("A","B","B","C","A","B","A","C","C"
+						,"D","C","D","D","E","F","D","E","F","F","E","E","D","E","C")*/
 
 		);
 		

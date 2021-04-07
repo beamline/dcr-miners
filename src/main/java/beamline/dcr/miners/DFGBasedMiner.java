@@ -1,7 +1,6 @@
 package beamline.dcr.miners;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import beamline.core.miner.AbstractMiner;
 import beamline.core.web.annotations.ExposedMiner;
@@ -13,19 +12,23 @@ import beamline.core.web.miner.models.MinerViewRaw;
 import beamline.core.web.miner.models.MinerView.Type;
 import beamline.dcr.annotations.ExposedDcrPattern;
 import beamline.dcr.model.DcrModel;
+import beamline.dcr.model.DcrModel.RELATION;
 import beamline.dcr.model.UnionRelationSet;
 import beamline.dcr.model.dfg.ActivityDecoration;
 import beamline.dcr.model.dfg.ExtendedDFG;
 import beamline.dcr.model.dfg.RelationDecoration;
-import beamline.dcr.model.relations.RelationPattern;
+import beamline.dcr.model.patterns.RelationPattern;
 import beamline.dcr.view.DcrModelText;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.reflections.Reflections;
 
 @ExposedMiner(
         name = "DFG based DCR miner",
         description = "This miner discovers a DCR model form a DFG",
-        configurationParameters = {@ExposedMinerParameter(name = "Max Lattice Level", type = MinerParameter.Type.CHOICE, defaultValue = "1;2;3"),},
+        //TODO: Get all RELATION values in defaultValue
+        configurationParameters = {@ExposedMinerParameter(name = "DCR Patterns",
+                type = MinerParameter.Type.CHOICE, defaultValue = "ImmCondition, "),},
         viewParameters = {}
 )
 public class DFGBasedMiner extends AbstractMiner {
@@ -34,14 +37,23 @@ public class DFGBasedMiner extends AbstractMiner {
     private Map<String, Integer> indexInCase = new HashMap<String, Integer>();
     private Map<String, Set<String>> observedActivitiesInCase = new HashMap<String, Set<String>>();
     private ExtendedDFG extendedDFG = new ExtendedDFG();
-    private int maxLatticeLevel;
 
+    private Reflections reflections;
+    private Set<Class<?>> dcrPatternClasses;
+
+
+    private String[] dcrPatternList;
+    private Set<String> postorderTraversal = new LinkedHashSet<>();
+
+    public DFGBasedMiner(){
+        this.reflections = new Reflections("beamline");
+        this.dcrPatternClasses = reflections.getTypesAnnotatedWith(ExposedDcrPattern.class);
+    }
     @Override
     public void configure(Collection<MinerParameterValue> collection) {
         for(MinerParameterValue v : collection) {
-            if (v.getName().equals("Max Lattice Level")) {
-                this.maxLatticeLevel = (int) v.getValue();
-
+            if (v.getName().equals("DCR Patterns")) {
+                this.dcrPatternList = (String[]) v.getValue();
             }
         }
     }
@@ -98,38 +110,85 @@ public class DFGBasedMiner extends AbstractMiner {
 
         UnionRelationSet unionRelationSet = new UnionRelationSet(dfg,DFGThreshold);
 
-
-        Set<Class<RelationPattern>> dcrPatternRelations = getPreorderDcrPatterns();
-
-        for (Class<RelationPattern> relationPattern : dcrPatternRelations){
-            RelationPattern dcrPattern = relationPattern.newInstance();
-            dcrPattern.populateConstraint(unionRelationSet);
+        //Create set of patterns to mine
+        for (String originalPattern : dcrPatternList){
+            addDependenciesToPostorderSet(originalPattern);
         }
 
-        //Add dcr patterns to DCR Model
-        //TODO Chance model.add to take input Triple
-        for (Triple<String, String, DcrModel.RELATION> pattern : unionRelationSet.getDcrRelations()){
-            model.addRelation(pattern.getLeft(),pattern.getMiddle(),pattern.getRight());
+        //mine patterns
+        for (String patternName : postorderTraversal){
+            RelationPattern patternToMine = getPatternMinerClass(patternName);
+            patternToMine.populateConstraint(unionRelationSet);
+        }
+
+        //Add user-chosen dcr patterns to DCR Model
+        for (String dcrPattern : dcrPatternList){
+            RELATION enumPattern = RELATION.valueOf(dcrPattern.toUpperCase());
+            Set<Triple<String, String, RELATION>> minedPatterns = unionRelationSet.getDcrRelationWithPattern(enumPattern);
+            model.addRelation(minedPatterns);
         }
 
         return model;
     }
 
-    private Set<Class<RelationPattern>> getPreorderDcrPatterns() {
 
-        Reflections reflections = new Reflections("beamline");
+    private void addDependenciesToPostorderSet(String root){
+        int currentRootIndex = 0;
+        Stack<Pair> stack = new Stack<>();
 
-        Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(ExposedDcrPattern.class);
+        while (root != null || !stack.isEmpty()) {
+            if (root != null) {
 
-        Set<Class<RelationPattern>> prioritizedDcrSet = annotated.stream()
-                .filter(aClass -> aClass.getAnnotation(ExposedDcrPattern.class).latticeLevel() <= maxLatticeLevel )
-                .sorted(Comparator.comparing(
-                        aClass -> aClass.getAnnotation(ExposedDcrPattern.class).latticeLevel())
-                )
-                .map(aClass -> (Class<RelationPattern>) aClass)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+                stack.push(Pair.of(root, currentRootIndex));
+                currentRootIndex = 0;
 
-        return prioritizedDcrSet;
+                String[] dcrDependencies = getDcrDependencies(root);
+                if (dcrDependencies.length>=1) {
+                    root = dcrDependencies[0];
+                }
+                else {
+                    root = null;
+                }
+                continue;
+            }
+
+            Pair temp = stack.pop();
+            postorderTraversal.add(temp.getLeft().toString());
+
+            while (!stack.isEmpty() && (int) temp.getRight() ==
+                    getDcrDependencies(stack.peek().getLeft().toString()).length - 1){
+                temp = stack.pop();
+                postorderTraversal.add(temp.getLeft().toString());
+            }
+
+            if (!stack.isEmpty()) {
+                String[] dependencies = getDcrDependencies(stack.peek().getLeft().toString());
+                root = dependencies[
+                        (int) temp.getRight() + 1];
+                currentRootIndex = (int) temp.getRight() + 1;
+            }
+        }
     }
+
+    private String[] getDcrDependencies(String dcr){
+        return getExposedPatternClass(dcr).getAnnotation(ExposedDcrPattern.class).dependencies();
+    }
+
+    private RelationPattern getPatternMinerClass (String patternName) throws IllegalAccessException, InstantiationException {
+        return (RelationPattern) getExposedPatternClass(patternName).newInstance();
+    }
+    private Class<?> getExposedPatternClass(String patternName){
+        for (Class<?> exposedPatternClass : dcrPatternClasses) {
+            ExposedDcrPattern exposedPattern = exposedPatternClass.getAnnotation(ExposedDcrPattern.class);
+            if (exposedPattern.name().equals(patternName)) {
+                return exposedPatternClass;
+            }
+        }
+        return null;
+
+    }
+
+
+
 
 }

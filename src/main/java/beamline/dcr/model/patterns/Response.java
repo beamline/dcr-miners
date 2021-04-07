@@ -1,16 +1,13 @@
-package beamline.dcr.model.relations;
+package beamline.dcr.model.patterns;
 
 import beamline.dcr.annotations.ExposedDcrPattern;
 import beamline.dcr.model.DcrModel;
 import beamline.dcr.model.UnionRelationSet;
-import beamline.dcr.model.dfg.ActivityDecoration;
 import org.apache.commons.lang3.tuple.Triple;
-
-import java.util.Set;
 
 @ExposedDcrPattern(
         name = "Response",
-        latticeLevel = 1
+        dependencies = {}
 )
 public class Response implements RelationPattern {
 

@@ -10,5 +10,5 @@ import static java.lang.annotation.ElementType.TYPE;
 @Target(TYPE)
 public @interface ExposedDcrPattern {
     String name();
-    int latticeLevel();
+    String[] dependencies();
 }

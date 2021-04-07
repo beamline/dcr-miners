@@ -1,4 +1,4 @@
-package beamline.dcr.model.relations;
+package beamline.dcr.model.patterns;
 
 import beamline.dcr.annotations.ExposedDcrPattern;
 import beamline.dcr.model.DcrModel;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 @ExposedDcrPattern(
         name = "DirectLoop",
-        latticeLevel = 2
+        dependencies = {}
 )
 public class DirectLoop implements RelationPattern {
 

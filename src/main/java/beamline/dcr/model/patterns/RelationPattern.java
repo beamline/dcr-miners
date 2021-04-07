@@ -1,4 +1,4 @@
-package beamline.dcr.model.relations;
+package beamline.dcr.model.patterns;
 
 import beamline.dcr.model.UnionRelationSet;
 

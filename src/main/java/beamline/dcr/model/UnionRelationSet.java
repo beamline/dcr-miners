@@ -47,10 +47,9 @@ public class UnionRelationSet {
         return DcrRelations.contains(relation);
     }
 
-    public Set<Pair<String,String>> getDcrRelationWithPattern(DcrModel.RELATION pattern){
+    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithPattern(DcrModel.RELATION pattern){
         return DcrRelations.stream()
                 .filter(entry -> entry.getRight() == pattern)
-                .map(triple -> Pair.of(triple.getLeft(),triple.getMiddle()))
                 .collect(Collectors.toSet());
     }
 
