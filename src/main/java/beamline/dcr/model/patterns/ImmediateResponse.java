@@ -17,11 +17,11 @@ public class ImmediateResponse implements RelationPattern {
     @Override
     public void populateConstraint(UnionRelationSet unionRelationSet) {
 
-        Set<Triple<String, String, DcrModel.RELATION>> dcrReponses =
+        Set<Triple<String, String, DcrModel.RELATION>> dcrResponses =
                 unionRelationSet.getDcrRelationWithPattern(DcrModel.RELATION.RESPONSE);
 
         Set<Pair<String, String>> DFGRelations = unionRelationSet.getDFGRelations();
-        for (Triple<String, String, DcrModel.RELATION> dcrResponse : dcrReponses){
+        for (Triple<String, String, DcrModel.RELATION> dcrResponse : dcrResponses){
             String src = dcrResponse.getLeft();
             String tar = dcrResponse.getMiddle();
             if (DFGRelations.contains(Pair.of(src,tar))){

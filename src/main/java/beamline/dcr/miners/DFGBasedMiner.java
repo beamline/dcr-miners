@@ -1,5 +1,6 @@
 package beamline.dcr.miners;
 
+import java.io.IOException;
 import java.util.*;
 
 import beamline.core.miner.AbstractMiner;
@@ -13,15 +14,18 @@ import beamline.core.web.miner.models.MinerView.Type;
 import beamline.dcr.annotations.ExposedDcrPattern;
 import beamline.dcr.model.DcrModel;
 import beamline.dcr.model.DcrModel.RELATION;
+import beamline.dcr.model.TransitiveReduction;
 import beamline.dcr.model.UnionRelationSet;
 import beamline.dcr.model.dfg.ActivityDecoration;
 import beamline.dcr.model.dfg.ExtendedDFG;
 import beamline.dcr.model.dfg.RelationDecoration;
 import beamline.dcr.model.patterns.RelationPattern;
+import beamline.dcr.view.DcrModelJson;
 import beamline.dcr.view.DcrModelText;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.reflections.Reflections;
+
 
 @ExposedMiner(
         name = "DFG based DCR miner",
@@ -92,16 +96,27 @@ public class DFGBasedMiner extends AbstractMiner {
         List<MinerView> views = new ArrayList<>();
 
         views.add(new MinerViewRaw("DFG", extendedDFG.toString()));
+
         //views.add(new MinerView("DCR", new DcrModelView(convert(extendedDFG)).toString(), Type.GRAPHVIZ));
         try {
-            views.add(new MinerView("DCR", new DcrModelText(convert(extendedDFG)).toString(), Type.RAW));
+            //views.add(new MinerView("DCR", new DcrModelText(convert(extendedDFG)).toString(), Type.RAW));
+            //write Json
+            for(MinerParameterValue v : collection) {
+                if (v.getName().equals("filename")) {
+                    new DcrModelJson(convert(extendedDFG)).toFile(v.getValue().toString());
+                }
+            }
+
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InstantiationException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return views;
     }
+
 
     private DcrModel convert(ExtendedDFG dfg) throws IllegalAccessException, InstantiationException {
         DcrModel model = new DcrModel();
@@ -112,16 +127,17 @@ public class DFGBasedMiner extends AbstractMiner {
 
         //Create set of patterns to mine
         for (String originalPattern : dcrPatternList){
-            addDependenciesToPostorderSet(originalPattern);
+            addDependenciesToPostorderSet(originalPattern,unionRelationSet);
         }
 
-        //mine patterns
-        for (String patternName : postorderTraversal){
-            RelationPattern patternToMine = getPatternMinerClass(patternName);
-            patternToMine.populateConstraint(unionRelationSet);
-        }
+        //Post processing
+        TransitiveReduction transitiveReduction = new TransitiveReduction();
 
-        //Add user-chosen dcr patterns to DCR Model
+
+        transitiveReduction.reduce(unionRelationSet,RELATION.CONDITION);
+        transitiveReduction.reduce(unionRelationSet,RELATION.RESPONSE);
+
+        //project user selected patterns to DCR Model
         for (String dcrPattern : dcrPatternList){
             RELATION enumPattern = RELATION.valueOf(dcrPattern.toUpperCase());
             Set<Triple<String, String, RELATION>> minedPatterns = unionRelationSet.getDcrRelationWithPattern(enumPattern);
@@ -131,8 +147,7 @@ public class DFGBasedMiner extends AbstractMiner {
         return model;
     }
 
-
-    private void addDependenciesToPostorderSet(String root){
+    private void addDependenciesToPostorderSet(String root,UnionRelationSet unionRelationSet) throws IllegalAccessException, InstantiationException {
         int currentRootIndex = 0;
         Stack<Pair> stack = new Stack<>();
 
@@ -153,12 +168,21 @@ public class DFGBasedMiner extends AbstractMiner {
             }
 
             Pair temp = stack.pop();
-            postorderTraversal.add(temp.getLeft().toString());
+            if (!postorderTraversal.contains(temp.getLeft().toString())){
+                minePattern(temp.getLeft().toString(),unionRelationSet);
+                postorderTraversal.add(temp.getLeft().toString());
+
+            }
+            //postorderTraversal.add(temp.getLeft().toString());
 
             while (!stack.isEmpty() && (int) temp.getRight() ==
                     getDcrDependencies(stack.peek().getLeft().toString()).length - 1){
                 temp = stack.pop();
-                postorderTraversal.add(temp.getLeft().toString());
+                if (!postorderTraversal.contains(temp.getLeft().toString())){
+                    minePattern(temp.getLeft().toString(),unionRelationSet);
+                    postorderTraversal.add(temp.getLeft().toString());
+
+                }
             }
 
             if (!stack.isEmpty()) {
@@ -169,11 +193,9 @@ public class DFGBasedMiner extends AbstractMiner {
             }
         }
     }
-
     private String[] getDcrDependencies(String dcr){
         return getExposedPatternClass(dcr).getAnnotation(ExposedDcrPattern.class).dependencies();
     }
-
     private RelationPattern getPatternMinerClass (String patternName) throws IllegalAccessException, InstantiationException {
         return (RelationPattern) getExposedPatternClass(patternName).newInstance();
     }
@@ -187,7 +209,13 @@ public class DFGBasedMiner extends AbstractMiner {
         return null;
 
     }
+    private void minePattern(String patternName,UnionRelationSet unionRelationSet) throws InstantiationException, IllegalAccessException {
+        RelationPattern patternToMine = getPatternMinerClass(patternName);
+        patternToMine.populateConstraint(unionRelationSet);
+    }
+    private void transitiveReduction(UnionRelationSet unionRelationSet){
 
+    }
 
 
 

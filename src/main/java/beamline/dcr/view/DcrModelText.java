@@ -2,14 +2,10 @@ package beamline.dcr.view;
 
 import beamline.dcr.model.DcrModel;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class DcrModelText {
-
 
     private DcrModel model;
 
@@ -18,8 +14,6 @@ public class DcrModelText {
         this.model = model;
 
     }
-
-
 
 
     @Override
@@ -34,7 +28,6 @@ public class DcrModelText {
                     "," + relation.getMiddle() + ")");
             b.append(System.lineSeparator());
         }
-
 
         return b.toString();
     }
