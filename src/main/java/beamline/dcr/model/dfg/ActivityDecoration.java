@@ -17,7 +17,9 @@ public class ActivityDecoration {
 			avgFirstOccurrence = avgFirstOccurrence + ((currentIndex - avgFirstOccurrence) / observationsFirstOccurrance);
 		}
 	}
-	
+	public double getNumObservations() {
+		return observations;
+	}
 	public double getAverageIndex() {
 		return avgIndex;
 	}

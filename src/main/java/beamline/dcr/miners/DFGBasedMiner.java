@@ -99,11 +99,14 @@ public class DFGBasedMiner extends AbstractMiner {
 
         //views.add(new MinerView("DCR", new DcrModelView(convert(extendedDFG)).toString(), Type.GRAPHVIZ));
         try {
-            //views.add(new MinerView("DCR", new DcrModelText(convert(extendedDFG)).toString(), Type.RAW));
+            //set of SESE's
+            //each SESE
+            DcrModel dcrModelConverted = convert(extendedDFG);
+            views.add(new MinerView("DCR", new DcrModelText(dcrModelConverted).toString(), Type.RAW));
             //write Json
             for(MinerParameterValue v : collection) {
                 if (v.getName().equals("filename")) {
-                    new DcrModelJson(convert(extendedDFG)).toFile(v.getValue().toString());
+                    new DcrModelJson(dcrModelConverted).toFile(v.getValue().toString());
                 }
             }
 

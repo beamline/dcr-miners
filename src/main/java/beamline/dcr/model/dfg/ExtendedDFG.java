@@ -1,9 +1,6 @@
 package beamline.dcr.model.dfg;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -93,7 +90,8 @@ public class ExtendedDFG {
 	public boolean isIsolatedNode(String candidate) {
 		return getOutgoingActivities(candidate).equals(getIncomingActivities(candidate));
 	}
-	
+
+
 	@Override
 	public String toString() {
 		StringBuffer b = new StringBuffer();

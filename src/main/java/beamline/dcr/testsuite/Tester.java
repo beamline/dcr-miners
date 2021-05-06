@@ -31,12 +31,15 @@ public class Tester {
 		String currentPath = rootPath + "/src/main/java/beamline/dcr/testsuite";
 
 		DFGBasedMiner sc = new DFGBasedMiner();
-		String[] patternList = {"Response","Condition"};
-		MinerParameterValue confParam = new MinerParameterValue("DCR Patterns", patternList);
-		String jsonFileName = currentPath + "/minedpatterns/TransitivelyReduced.json";
-		MinerParameterValue fileParam = new MinerParameterValue("filename", jsonFileName);
+
 		Collection<MinerParameterValue> coll = new ArrayList<>();
+
+		String[] patternList = {"Response","Condition","Include","Exclude"};
+		MinerParameterValue confParam = new MinerParameterValue("DCR Patterns", patternList);
 		coll.add(confParam);
+
+		String jsonFileName = currentPath + "/minedpatterns/TransitivelyReducedIncludeExclude.json";
+		MinerParameterValue fileParam = new MinerParameterValue("filename", jsonFileName);
 		coll.add(fileParam);
 		sc.configure(coll);
 		sc.setStream(new Stream("test", "localhost", ""));
@@ -61,8 +64,9 @@ public class Tester {
 
 			}
 		}
+
 		
-		/*List<MinerView> views = sc.getViews(coll);
+		List<MinerView> views = sc.getViews(coll);
 
 		System.out.println("\n\n++++++++++++++++++++++++++++++++");
 		for (MinerView v : views) {
@@ -70,9 +74,11 @@ public class Tester {
 			System.out.println("");
 			System.out.println(v.getValue());
 			System.out.println("\n");
-		}*/
+		}
 		System.out.println("++++++++++++++++++++++++++++++++");
 
+		// For performance testing
+		/*
 		String baselineFilePath ="src/main/java/beamline/dcr/testsuite/minedpatterns/BaseLineRelations.JSON";
 		String baselineFileWithoutExcl = "src/main/java/beamline/dcr/testsuite/minedpatterns/BaseLineRelations_wo_exclude.JSON";
 
@@ -81,6 +87,11 @@ public class Tester {
 		System.out.println(performanceStatistics.getPrecisionRecallString(baselineFilePath,jsonFileName));
 		System.out.println("Without exclusion in baseline and with transitive reduction");
 		System.out.println(performanceStatistics.getPrecisionRecallString(baselineFileWithoutExcl,jsonFileName));
+
+		ConformanceTesting conformanceTesting = new ConformanceTesting("graphId",currentPath + eventLog);
+		conformanceTesting.checkConformance();
+		*/
+
 		sc.stop();
 		System.exit(0);
 	}

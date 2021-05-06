@@ -23,9 +23,25 @@ public class DcrModelText {
         b.append("PATTERNS");
         b.append(System.lineSeparator());
 
+
+        String pattern ="";
         for (Triple<String, String, DcrModel.RELATION> relation : model.getRelations()) {
-            b.append(relation.getRight().name()+"(" + relation.getLeft() +
-                    "," + relation.getMiddle() + ")");
+            switch (relation.getRight()) {
+                case CONDITION:
+                    pattern = "-->*";
+                    break;
+                case RESPONSE:
+                    pattern = "*-->";
+                    break;
+                case INCLUDE:
+                    pattern = "-->+";
+                    break;
+                case EXCLUDE:
+                    pattern = "-->%";
+                    break;
+            }
+            b.append(relation.getLeft()+" " + pattern +
+                    " " + relation.getMiddle());
             b.append(System.lineSeparator());
         }
 

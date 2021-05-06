@@ -28,6 +28,7 @@ public class PerformanceStatistics {
         Double precision = tp/(tp+fp);
         Double recall = tp/(tp+fn);
 
+        System.out.println(tp);
         String scoreString =String.format("tp: %s, fp: %s, fn: %s\nprecision: %s, recall: %s",
                 tp,fp,fn,precision,recall);
 

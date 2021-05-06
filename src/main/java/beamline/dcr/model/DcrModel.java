@@ -23,8 +23,6 @@ public class DcrModel {
 
 	}
 
-
-	
 	private Set<Triple<String, String, RELATION>> relations = new HashSet<Triple<String, String, RELATION>>();
 	
 	public void addRelation(Set<Triple<String, String, RELATION>> setOfRelations) {
