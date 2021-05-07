@@ -27,7 +27,7 @@ import java.util.*;
 public class Tester {
 
 	public static void main(String[] args) throws Exception {
-		String rootPath = System.getProperty("user.dir");
+		/*String rootPath = System.getProperty("user.dir");
 		String currentPath = rootPath + "/src/main/java/beamline/dcr/testsuite";
 
 		DFGBasedMiner sc = new DFGBasedMiner();
@@ -38,8 +38,8 @@ public class Tester {
 		MinerParameterValue confParam = new MinerParameterValue("DCR Patterns", patternList);
 		coll.add(confParam);
 
-		String jsonFileName = currentPath + "/minedpatterns/TransitivelyReducedIncludeExclude.json";
-		MinerParameterValue fileParam = new MinerParameterValue("filename", jsonFileName);
+		String fileName = currentPath + "/minedpatterns/dcr_all_relations" + java.time.LocalDate.now();
+		MinerParameterValue fileParam = new MinerParameterValue("filename", fileName);
 		coll.add(fileParam);
 		sc.configure(coll);
 		sc.setStream(new Stream("test", "localhost", ""));
@@ -90,10 +90,14 @@ public class Tester {
 
 		ConformanceTesting conformanceTesting = new ConformanceTesting("graphId",currentPath + eventLog);
 		conformanceTesting.checkConformance();
-		*/
+
 
 		sc.stop();
-		System.exit(0);
+		System.exit(0);*/
+		DcrApiCommunicator dcrApi = new DcrApiCommunicator("1002026");
+		dcrApi.instantiateModel();
+		dcrApi.getEnabledEvents();
+		dcrApi.executeEvent("t41");
 	}
 
 

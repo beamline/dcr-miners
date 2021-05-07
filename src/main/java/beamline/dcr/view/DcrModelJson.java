@@ -33,7 +33,7 @@ public class DcrModelJson {
 
         jsonObjectFile.put("Relation", jsonArray);
 
-        FileWriter fileWriter = new FileWriter(fileName);
+        FileWriter fileWriter = new FileWriter(fileName + ".json");
         fileWriter.write(jsonObjectFile.toJSONString());
         fileWriter.close();
 

@@ -22,6 +22,7 @@ import beamline.dcr.model.dfg.RelationDecoration;
 import beamline.dcr.model.patterns.RelationPattern;
 import beamline.dcr.view.DcrModelJson;
 import beamline.dcr.view.DcrModelText;
+import beamline.dcr.view.DcrModelXML;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.reflections.Reflections;
@@ -106,15 +107,14 @@ public class DFGBasedMiner extends AbstractMiner {
             //write Json
             for(MinerParameterValue v : collection) {
                 if (v.getName().equals("filename")) {
-                    new DcrModelJson(dcrModelConverted).toFile(v.getValue().toString());
+                    //new DcrModelJson(dcrModelConverted).toFile(v.getValue().toString());
+                    new DcrModelXML(dcrModelConverted).toFile(v.getValue().toString());
                 }
             }
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
             e.printStackTrace();
         }
         return views;

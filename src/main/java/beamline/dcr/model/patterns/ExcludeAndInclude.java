@@ -43,7 +43,7 @@ public class ExcludeAndInclude implements RelationPattern {
 
         }
         for(Pair<String,String> include : includeSet){
-            unionRelationSet.addDcrRelation(Triple.of(include.getLeft(), include.getRight(), DcrModel.RELATION.EXCLUDE));
+            unionRelationSet.addDcrRelation(Triple.of(include.getLeft(), include.getRight(), DcrModel.RELATION.INCLUDE));
 
         }
     }
