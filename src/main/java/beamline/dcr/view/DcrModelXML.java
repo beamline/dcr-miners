@@ -48,12 +48,13 @@ public class DcrModelXML {
             root.setAttribute("title","DCR");
             document.appendChild(root);
             Element specification = document.createElement("specification");
+            Element constraints = document.createElement("constraints");
             Element runtime = document.createElement("runtime");
 
             insertResourcesAndMarkings(specification,runtime);
 
-            insertConstraints(specification);
-
+            insertConstraints(constraints);
+            specification.appendChild(constraints);
             root.appendChild(specification);
             root.appendChild(runtime);
 
@@ -62,6 +63,8 @@ public class DcrModelXML {
             DOMSource domSource = new DOMSource(document);
             StreamResult streamResult = new StreamResult(new File(fileName + ".xml"));
             transformer.transform(domSource, streamResult);
+
+
 
 
         } catch (TransformerConfigurationException e) {
@@ -78,6 +81,8 @@ public class DcrModelXML {
         //Events
         Element resources = document.createElement("resources");
         Element events = document.createElement("events");
+        Element labels = document.createElement("labels");
+        Element labelMappings = document.createElement("labelMappings");
         Element marking = document.createElement("marking");
         marking.appendChild(document.createElement("globalStore"));
         marking.appendChild(document.createElement("executed"));
@@ -97,6 +102,15 @@ public class DcrModelXML {
             eventElement.setAttribute("id",event);
             events.appendChild(eventElement);
 
+            //labels and mapping
+            Element label = document.createElement("label");
+            label.setAttribute("id", event);
+            labels.appendChild(label);
+            Element labelMapping = document.createElement("labelMapping");
+            labelMapping.setAttribute("eventId", event);
+            labelMapping.setAttribute("labelId", event);
+            labelMappings.appendChild(labelMapping);
+
             //Markings
             Element eventMark = document.createElement("event");
             eventMark.setAttribute("id", event);
@@ -105,10 +119,13 @@ public class DcrModelXML {
         }
         runtime.appendChild(marking);
         resources.appendChild(events);
+        resources.appendChild(labels);
+        resources.appendChild(labelMappings);
         specification.appendChild(resources);
 
     }
-    private void insertConstraints(Element specification) {
+    private void insertConstraints(Element constraints) {
+
         Element conditions = document.createElement("conditions");
         Element responses = document.createElement("responses");
         Element coresponses = document.createElement("coresponses");
@@ -148,13 +165,13 @@ public class DcrModelXML {
 
         }
 
-        specification.appendChild(conditions);
-        specification.appendChild(responses);
-        specification.appendChild(coresponses);
-        specification.appendChild(excludes);
-        specification.appendChild(includes);
-        specification.appendChild(milestones);
-        specification.appendChild(spawns);
+        constraints.appendChild(conditions);
+        constraints.appendChild(responses);
+        constraints.appendChild(coresponses);
+        constraints.appendChild(excludes);
+        constraints.appendChild(includes);
+        constraints.appendChild(milestones);
+        constraints.appendChild(spawns);
     }
 
 

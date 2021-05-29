@@ -29,6 +29,5 @@ public class ImmediateCondition implements RelationPattern {
                         dcrCondition);
             }
         }
-
     }
 }

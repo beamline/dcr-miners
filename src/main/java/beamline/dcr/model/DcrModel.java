@@ -25,8 +25,11 @@ public class DcrModel {
 
 	private Set<Triple<String, String, RELATION>> relations = new HashSet<Triple<String, String, RELATION>>();
 	
-	public void addRelation(Set<Triple<String, String, RELATION>> setOfRelations) {
+	public void addRelations(Set<Triple<String, String, RELATION>> setOfRelations) {
 		relations.addAll(setOfRelations);
+	}
+	public void addRelation(Triple<String, String, RELATION> relation) {
+		relations.add(relation);
 	}
 	
 	public Set<String> getActivities() {
@@ -45,8 +48,8 @@ public class DcrModel {
 		return relations;
 	}
 
-	public boolean containsRelation(String source, String target, RELATION relation){
-		return relations.contains(Triple.of(source, target, relation));
+	public boolean containsRelation(Triple<String, String, RELATION> relation){
+		return relations.contains(relation);
 	}
 
 	public void removeRelation(String source, String target, RELATION relation){

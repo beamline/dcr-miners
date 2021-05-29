@@ -56,7 +56,7 @@ public class DcrVisualizerTester extends AbstractMiner {
 		dcrRelations.add(Triple.of("D: Medical examination", "C: Further examination needed", DcrModel.RELATION.CONDITION));
 		dcrRelations.add(Triple.of("A: 2nd medical examination", "B: Prescribe medicine", DcrModel.RELATION.MILESTONE));
 
-		model.addRelation(dcrRelations);
+		model.addRelations(dcrRelations);
 		return model;
 	}
 }

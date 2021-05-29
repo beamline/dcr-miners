@@ -34,9 +34,9 @@ public class ExcludeAndInclude implements RelationPattern {
         precedence();
 
         //notChainSuccession
-        notChainSuccession();
+        //notChainSuccession();
 
-        removeRedundantExcludes();
+        //removeRedundantExcludes();
 
         for(Pair<String,String> exclude : excludeSet){
             unionRelationSet.addDcrRelation(Triple.of(exclude.getLeft(), exclude.getRight(), DcrModel.RELATION.EXCLUDE));
@@ -50,7 +50,7 @@ public class ExcludeAndInclude implements RelationPattern {
 
     private void selfExclusion(){
         for (String activity : unionRelationSet.getUniqueActivities()){
-            if (unionRelationSet.getActivityDecoration(activity).getNumObservations()<=1){
+            if (unionRelationSet.getActivityDecoration(activity).appearMostOnce()){
                 this.excludeSet.add(Pair.of(activity,activity));
             }
         }
@@ -70,7 +70,7 @@ public class ExcludeAndInclude implements RelationPattern {
                 String activity2 = listOfActivities[j];
                 ActivityDecoration decoration2 = unionRelationSet.getActivityDecoration(activity2);
 
-                if (decoration1.getAverageFirstOccurrance()<decoration2.getAverageFirstOccurrance() &
+                if (decoration1.getAverageFirstOccurrence()<decoration2.getAverageFirstOccurrence() &
                         decoration1.getAverageIndex()<decoration2.getAverageIndex()){
                     //alternate precedence
                     if (decoration1.getNumObservations()==decoration2.getNumObservations()){
@@ -82,7 +82,7 @@ public class ExcludeAndInclude implements RelationPattern {
                         this.excludeSet.add(Pair.of(activity2,activity1));
                     }
                 }
-                else if (decoration2.getAverageFirstOccurrance()<decoration1.getAverageFirstOccurrance() &
+                else if (decoration2.getAverageFirstOccurrence()<decoration1.getAverageFirstOccurrence() &
                         decoration2.getAverageIndex()<decoration1.getAverageIndex()){
                     //alternate precedence
                     if (decoration1.getNumObservations()==decoration2.getNumObservations()){
@@ -135,7 +135,7 @@ public class ExcludeAndInclude implements RelationPattern {
         return matrix;
     }
 
-    private BitSet[] computeTransitiveClosure(final BitSet[] matrix) {
+    private void computeTransitiveClosure(final BitSet[] matrix) {
         // compute path matrix / transitive closure
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix.length; j++) {
@@ -151,7 +151,6 @@ public class ExcludeAndInclude implements RelationPattern {
                 }
             }
         }
-        return matrix;
     }
 
     private BitSet[] deepCopyBitSet(BitSet[] bitSet){
@@ -182,7 +181,7 @@ public class ExcludeAndInclude implements RelationPattern {
                 ActivityDecoration decoration2 = unionRelationSet.getActivityDecoration(activity2);
 
                 //if activity 1 always precedes activity 2
-                if (decoration1.getAverageFirstOccurrance()<decoration2.getAverageFirstOccurrance() &
+                if (decoration1.getAverageFirstOccurrence()<decoration2.getAverageFirstOccurrence() &
                         decoration1.getAverageIndex()<decoration2.getAverageIndex()) {
 
                     Set<String> activitiesBetween = getActivitiesBetween(i,j);

@@ -25,17 +25,17 @@ public class DcrApiCommunicator {
         this.modelId = modelId;
     }
 
-    public void instantiateModel(){
+    public void instantiateModel() throws Exception {
         String url = "https://repository.dcrgraphs.net/api/graphs/" +modelId + "/sims";
 
-        //instantiate (ID as response is not yet implemented)
-        //sendRequest("POST","",url);
+        //instantiate and define instance id
+        HttpURLConnection connection = sendRequest("POST","",url);
+        this.instanceId = getInstanceId(connection);
 
-        //Get latest instantiation
-        HttpURLConnection connection = sendRequest("GET","",url);
-        Document xmlBody = getXmlResponse(connection);
-        NodeList traces = xmlBody.getElementsByTagName("trace");
-        this.instanceId = traces.item(traces.getLength()-1).getAttributes().getNamedItem("id").getNodeValue();
+        if (instanceId == null){
+            throw new Exception("The process instance was not created");
+        }
+
     }
 
     public List<String> getEnabledEvents(){
@@ -65,6 +65,13 @@ public class DcrApiCommunicator {
 
 
 
+    }
+
+    public void deleteProcessInstance() throws Exception {
+        String url="https://repository.dcrgraphs.net/api/graphs/"+ modelId +
+                "/sims/"+ instanceId;
+        HttpURLConnection connection = sendRequest("DELETE","",url);
+        if(connection.getResponseCode()!= 204) throw new Exception("Instance not deleted");
     }
 
     private HttpURLConnection sendRequest(String requestType, String body, String urlString){
@@ -120,6 +127,7 @@ public class DcrApiCommunicator {
         try {
             InputStream inputStream = connection.getInputStream();
 
+
             byte[] res = new byte[2048];
             int i = 0;
             StringBuilder response = new StringBuilder();
@@ -148,6 +156,13 @@ public class DcrApiCommunicator {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private String getInstanceId(HttpURLConnection connection){
+        String headerFieldValue = connection.getHeaderField("X-DCR-simulation-ID");
+        connection.disconnect();
+        return headerFieldValue;
+
     }
 
     private int getResponseStatus(HttpURLConnection connection){

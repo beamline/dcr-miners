@@ -1,6 +1,5 @@
 package beamline.dcr.miners;
 
-import java.io.IOException;
 import java.util.*;
 
 import beamline.core.miner.AbstractMiner;
@@ -14,13 +13,11 @@ import beamline.core.web.miner.models.MinerView.Type;
 import beamline.dcr.annotations.ExposedDcrPattern;
 import beamline.dcr.model.DcrModel;
 import beamline.dcr.model.DcrModel.RELATION;
-import beamline.dcr.model.TransitiveReduction;
 import beamline.dcr.model.UnionRelationSet;
 import beamline.dcr.model.dfg.ActivityDecoration;
 import beamline.dcr.model.dfg.ExtendedDFG;
 import beamline.dcr.model.dfg.RelationDecoration;
 import beamline.dcr.model.patterns.RelationPattern;
-import beamline.dcr.view.DcrModelJson;
 import beamline.dcr.view.DcrModelText;
 import beamline.dcr.view.DcrModelXML;
 import org.apache.commons.lang3.tuple.Pair;
@@ -134,17 +131,17 @@ public class DFGBasedMiner extends AbstractMiner {
         }
 
         //Post processing
-        TransitiveReduction transitiveReduction = new TransitiveReduction();
+        /*TransitiveReduction transitiveReduction = new TransitiveReduction();
 
 
         transitiveReduction.reduce(unionRelationSet,RELATION.CONDITION);
-        transitiveReduction.reduce(unionRelationSet,RELATION.RESPONSE);
+        transitiveReduction.reduce(unionRelationSet,RELATION.RESPONSE);*/
 
         //project user selected patterns to DCR Model
         for (String dcrPattern : dcrPatternList){
             RELATION enumPattern = RELATION.valueOf(dcrPattern.toUpperCase());
             Set<Triple<String, String, RELATION>> minedPatterns = unionRelationSet.getDcrRelationWithPattern(enumPattern);
-            model.addRelation(minedPatterns);
+            model.addRelations(minedPatterns);
         }
 
         return model;
@@ -215,9 +212,6 @@ public class DFGBasedMiner extends AbstractMiner {
     private void minePattern(String patternName,UnionRelationSet unionRelationSet) throws InstantiationException, IllegalAccessException {
         RelationPattern patternToMine = getPatternMinerClass(patternName);
         patternToMine.populateConstraint(unionRelationSet);
-    }
-    private void transitiveReduction(UnionRelationSet unionRelationSet){
-
     }
 
 

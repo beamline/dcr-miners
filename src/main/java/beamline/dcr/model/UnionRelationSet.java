@@ -43,6 +43,7 @@ public class UnionRelationSet {
         removeDCRRelation(oldRelation);
         addDcrRelation(newRelation);
     }
+
     public boolean DCRRelationsContains(Triple<String,String, DcrModel.RELATION> relation){
         return DcrRelations.contains(relation);
     }
@@ -50,6 +51,17 @@ public class UnionRelationSet {
     public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithPattern(DcrModel.RELATION pattern){
         return DcrRelations.stream()
                 .filter(entry -> entry.getRight() == pattern)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationwithTarget(String target, DcrModel.RELATION relation){
+        return DcrRelations.stream()
+                .filter(entry -> entry.getMiddle().equals(target) && entry.getRight() == relation)
+                .collect(Collectors.toSet());
+    }
+    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationwithSource(String source, DcrModel.RELATION relation){
+        return DcrRelations.stream()
+                .filter(entry -> entry.getLeft().equals(source) && entry.getRight() == relation)
                 .collect(Collectors.toSet());
     }
 

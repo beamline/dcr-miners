@@ -26,13 +26,16 @@ import java.util.Map;
 import java.util.Set;
 
 public class ConformanceTesting {
-    String graphId;
-    String eventLogPath;
-    Integer illegalActions = 0;
 
-    public ConformanceTesting(String graphId, String eventLogPath) {
-        this.graphId = graphId;
+    private String eventLogPath;
+    private Double fitness;
+    private Double precision;
+
+    TransitionSystem transitionSystem;
+
+    public ConformanceTesting(String eventLogPath, TransitionSystem transitionSystem) {
         this.eventLogPath = eventLogPath;
+        this.transitionSystem = transitionSystem;
     }
     public void checkConformance() throws Exception {
 
@@ -43,42 +46,57 @@ public class ConformanceTesting {
 
         FileOutputStream fileOut = new FileOutputStream(eventLogPath+"_withComformance.xes");
         XesXmlSerializer outputSerializer = new XesXmlSerializer();
+        int illegalActions;
+        int counter=1;
+        int worstCaseCost = 0;
+        int totalCost=0;
+
+        int sumActivitiesExecuted = 0;
+        int sumExecutableActivities = 0;
         for (XLog traces : parsedXesFile){
             for (XTrace trace : traces){
 
+                illegalActions = 0;
                 String traceId = trace.getAttributes().get("concept:name").toString();
                 boolean traceIslegal = true;
                 for (XEvent event : trace ){
                     String activity = event.getAttributes().get("concept:name").toString();
-                    //Check rest if event is ok
+                    //Check if event can be executed
+                    if(!transitionSystem.executeEvent(activity)){
+                        traceIslegal=false;
+                        illegalActions++;
+                    }
+                    sumActivitiesExecuted += transitionSystem.getExecutedOfEnabled();
+                    sumExecutableActivities += transitionSystem.getEnabledEvents().size();
+
 
                 }
+                if (transitionSystem.anyPendingEvents()){
+                    traceIslegal = false;
+                }
 
-
-                XAttribute xAttribute = new XAttributeBooleanImpl("pdc:isPos",true);
+                XAttribute xAttribute = new XAttributeBooleanImpl("pdc:isPos",traceIslegal);
                 XAttributeMap xMap =trace.getAttributes();
                 xMap.put("mapKey",xAttribute);
                 trace.setAttributes(xMap);
 
-
+                System.out.println("Trace: " + counter + "/" + traces.size() + " - illegal actions: " + illegalActions + "/" + trace.size() +
+                "- Pending state at completion: " + String.valueOf(transitionSystem.anyPendingEvents()));
+                transitionSystem.resetMarking();
+                counter++;
 
             }
+            this.precision = (double) sumActivitiesExecuted/sumExecutableActivities;
+            this.fitness = (double) 1-(totalCost/worstCaseCost);
             outputSerializer.serialize(traces,fileOut);
         }
     }
 
-
-    private String makeRequest(String url) throws IOException {
-        URL dcrItu = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) dcrItu.openConnection();
-
-        con.setRequestMethod("GET");
-
-        String responseMessage = con.getResponseMessage();
-        con.disconnect();
-
-        return responseMessage;
+    public Double getFitness() {
+        return fitness;
     }
 
-
+    public Double getPrecision() {
+        return precision;
+    }
 }

@@ -3,17 +3,18 @@ package beamline.dcr.model.patterns;
 import beamline.dcr.annotations.ExposedDcrPattern;
 import beamline.dcr.model.DcrModel;
 import beamline.dcr.model.UnionRelationSet;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Set;
 
 @ExposedDcrPattern(
         name = "Response",
-        dependencies = {}
+        dependencies = {"DirectLoop"}
 )
 public class Response implements RelationPattern {
 
-    @Override
+    /*@Override
     public void populateConstraint(UnionRelationSet unionRelationSet) {
         String[] activities = unionRelationSet.getUniqueActivities();
         Set<Triple<String,String, DcrModel.RELATION>> directLoops =
@@ -33,8 +34,28 @@ public class Response implements RelationPattern {
                         unionRelationSet.addDcrRelation(Triple.of(activities[j], activities[i], DcrModel.RELATION.RESPONSE));
                     }
                 }
-
             }
+        }
+    }*/
+    //IMM RESPONSE
+    @Override
+    public void populateConstraint(UnionRelationSet unionRelationSet) {
+        Set<Pair<String, String>> dfgRelations = unionRelationSet.getDFGRelations();
+        Set<Triple<String,String, DcrModel.RELATION>> directLoops =
+                unionRelationSet.getDcrRelationWithPattern(DcrModel.RELATION.DIRECTLOOP);
+        for (Pair<String, String> relation : dfgRelations) {
+            String source = relation.getLeft();
+            double avgIndexSource =
+                    unionRelationSet.getActivityDecoration(source).getAverageIndex();
+            double traceAppearanceSource = unionRelationSet.getActivityDecoration(source).getTraceAppearances();
+            String target = relation.getRight();
+            double avgIndexTarget =
+                    unionRelationSet.getActivityDecoration(target).getAverageIndex();
+            double traceAppearancesTarget = unionRelationSet.getActivityDecoration(target).getTraceAppearances();
+            if (avgIndexSource < avgIndexTarget ) {
+                unionRelationSet.addDcrRelation(Triple.of(source, target, DcrModel.RELATION.RESPONSE));
+            }
+
         }
     }
 }
