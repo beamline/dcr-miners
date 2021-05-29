@@ -68,8 +68,7 @@ public class ConformanceTesting {
                     }
                     sumActivitiesExecuted += transitionSystem.getExecutedOfEnabled();
                     sumExecutableActivities += transitionSystem.getEnabledEvents().size();
-
-
+                    worstCaseCost ++;
                 }
                 if (transitionSystem.anyPendingEvents()){
                     traceIslegal = false;
