@@ -1,29 +1,13 @@
 package beamline.dcr.testsuite;
 
-import org.deckfour.xes.classification.XEventAttributeClassifier;
-import org.deckfour.xes.classification.XEventClass;
-import org.deckfour.xes.extension.XExtension;
-import org.deckfour.xes.in.XesXmlGZIPParser;
+import org.apache.commons.lang3.tuple.Pair;
 import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.*;
 import org.deckfour.xes.model.impl.XAttributeBooleanImpl;
-import org.deckfour.xes.model.impl.XAttributeMapImpl;
-import org.deckfour.xes.model.impl.XAttributeMapLazyImpl;
-import org.deckfour.xes.model.impl.XEventImpl;
 import org.deckfour.xes.out.XesXmlSerializer;
-import org.deckfour.xes.util.XAttributeUtils;
-
-import javax.xml.stream.XMLStreamWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ConformanceTesting {
 
@@ -48,16 +32,14 @@ public class ConformanceTesting {
         XesXmlSerializer outputSerializer = new XesXmlSerializer();
         int illegalActions;
         int counter=1;
-        int worstCaseCost = 0;
-        int totalCost=0;
-
-        int sumActivitiesExecuted = 0;
-        int sumExecutableActivities = 0;
+        double worstCaseCost = 0.0;
+        double totalCost = 0.0;
+        double sumActivitiesExecuted = 0.0;
+        double sumExecutableActivities = 0.0;
         for (XLog traces : parsedXesFile){
             for (XTrace trace : traces){
-
+                Set<Pair<String,BitSet[]>> markingSet = new HashSet<>();
                 illegalActions = 0;
-                String traceId = trace.getAttributes().get("concept:name").toString();
                 boolean traceIslegal = true;
                 for (XEvent event : trace ){
                     String activity = event.getAttributes().get("concept:name").toString();
@@ -66,7 +48,10 @@ public class ConformanceTesting {
                         traceIslegal=false;
                         illegalActions++;
                     }
-                    sumActivitiesExecuted += transitionSystem.getExecutedOfEnabled();
+                    if(markingSet.add(Pair.of(activity,transitionSystem.getMarking()))){
+                        sumActivitiesExecuted += transitionSystem.getExecutedOfEnabled();
+                    }
+
                     sumExecutableActivities += transitionSystem.getEnabledEvents().size();
                     worstCaseCost ++;
                 }
@@ -78,16 +63,17 @@ public class ConformanceTesting {
                 XAttributeMap xMap =trace.getAttributes();
                 xMap.put("mapKey",xAttribute);
                 trace.setAttributes(xMap);
-
-                System.out.println("Trace: " + counter + "/" + traces.size() + " - illegal actions: " + illegalActions + "/" + trace.size() +
-                "- Pending state at completion: " + String.valueOf(transitionSystem.anyPendingEvents()));
+                totalCost+=illegalActions;
+                //System.out.println("Trace: " + counter + "/" + traces.size() + " - illegal actions: " + illegalActions + "/" + trace.size() +
+                //"- Pending state at completion: " + String.valueOf(transitionSystem.anyPendingEvents()));
                 transitionSystem.resetMarking();
                 counter++;
 
             }
-            this.precision = (double) sumActivitiesExecuted/sumExecutableActivities;
-            this.fitness = (double) 1-(totalCost/worstCaseCost);
-            outputSerializer.serialize(traces,fileOut);
+            this.precision = sumActivitiesExecuted/sumExecutableActivities;
+            this.fitness = 1-(totalCost/worstCaseCost);
+
+            //outputSerializer.serialize(traces,fileOut); //uncomment to save xes with transition analysis (forbidden/not)
         }
     }
 

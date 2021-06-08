@@ -8,7 +8,7 @@ public class TransitiveReduction {
 
     private List<String> activityList;
     private BitSet[] originalMatrix;
-    private Set<Triple<String, String, DcrModel.RELATION>> allPattersWithPattern;
+    private Set<Triple<String, String, DcrModel.RELATION>> allRelationsWithPattern;
     private DcrModel.RELATION reducedPattern;
     public TransitiveReduction() {
     }
@@ -16,11 +16,11 @@ public class TransitiveReduction {
     private void setUp(UnionRelationSet unionRelationSet, DcrModel.RELATION pattern){
 
         this.reducedPattern = pattern;
-        this.allPattersWithPattern = unionRelationSet.getDcrRelationWithPattern(pattern);
+        this.allRelationsWithPattern = unionRelationSet.getDcrRelationWithPattern(pattern);
         //Consider ordering Set in alphabetic order
         //Get set of unique activies
         Set<String> activitySet = new TreeSet<>();
-        for (Triple<String, String, DcrModel.RELATION> patternRelation : allPattersWithPattern) {
+        for (Triple<String, String, DcrModel.RELATION> patternRelation : allRelationsWithPattern) {
             activitySet.add(patternRelation.getLeft());
             activitySet.add(patternRelation.getMiddle());
         }
@@ -68,11 +68,10 @@ public class TransitiveReduction {
     public void reduce(UnionRelationSet unionRelationSet, DcrModel.RELATION patternToReduce){
         setUp(unionRelationSet,patternToReduce);
         //intialize matrix with edges
-        for (Triple<String, String, DcrModel.RELATION> relationPattern : allPattersWithPattern) {
+        for (Triple<String, String, DcrModel.RELATION> relationPattern : allRelationsWithPattern) {
 
             String src = relationPattern.getLeft();
             String tar = relationPattern.getMiddle();
-            System.out.println(src + " " + tar);
             int i1 = activityList.indexOf(src);
             int i2 = activityList.indexOf(tar);
             this.originalMatrix[i1].set(i2);

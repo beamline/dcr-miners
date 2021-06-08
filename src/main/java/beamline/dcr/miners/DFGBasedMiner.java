@@ -127,11 +127,11 @@ public class DFGBasedMiner extends AbstractMiner {
 
         //Create set of patterns to mine
         for (String originalPattern : dcrPatternList){
-            addDependenciesToPostorderSet(originalPattern,unionRelationSet);
+            minePatternsFromPostOrderDependencies(originalPattern,unionRelationSet);
         }
 
         //Post processing
-        /*TransitiveReduction transitiveReduction = new TransitiveReduction();
+        /*c
 
 
         transitiveReduction.reduce(unionRelationSet,RELATION.CONDITION);
@@ -146,8 +146,7 @@ public class DFGBasedMiner extends AbstractMiner {
 
         return model;
     }
-
-    private void addDependenciesToPostorderSet(String root,UnionRelationSet unionRelationSet) throws IllegalAccessException, InstantiationException {
+    private void minePatternsFromPostOrderDependencies(String root, UnionRelationSet unionRelationSet) throws IllegalAccessException, InstantiationException {
         int currentRootIndex = 0;
         Stack<Pair> stack = new Stack<>();
 
@@ -214,6 +213,10 @@ public class DFGBasedMiner extends AbstractMiner {
         patternToMine.populateConstraint(unionRelationSet);
     }
 
+    //For testsuite
 
+    public ExtendedDFG getExtendedDFG() {
+        return extendedDFG;
+    }
 
 }

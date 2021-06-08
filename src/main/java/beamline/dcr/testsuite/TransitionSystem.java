@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class TransitionSystem {
-
+    //TODO write to dcrmodel instead of unionRelationSet
     private List<String> eventList;
     private BitSet[] marking; //executed,included,pending
 
@@ -85,7 +85,7 @@ public class TransitionSystem {
         for(int i = 0; i < getEnabledEvents().size(); i++){
             enabledString = enabledString + ", " + getEnabledEvents().get(i);
         }
-        System.out.println("Executed: " + event + "- Enabled:" + enabledString);
+
         if (getEnabledEvents().contains(event)){
             int eventIndex = eventList.indexOf(event);
             //Set to executed
@@ -147,6 +147,9 @@ public class TransitionSystem {
             if (marking[eventListIndex].get(0)) numExecuted++;
         }
         return numExecuted;
+    }
+    public BitSet[] getMarking(){
+        return marking;
     }
     private void loadGraph(String xmlGraphPath) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory factory =

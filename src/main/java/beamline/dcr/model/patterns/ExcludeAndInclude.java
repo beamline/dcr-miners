@@ -47,6 +47,43 @@ public class ExcludeAndInclude implements RelationPattern {
 
         }
     }
+    public void populateConstraint(UnionRelationSet unionRelationSet,Set<Integer> parameterSetting) {
+        this.activityList = new ArrayList<>(Arrays.asList(unionRelationSet.getUniqueActivities()));
+        this.excludeSet = new HashSet<>();
+        this.includeSet = new HashSet<>();
+        this.unionRelationSet = unionRelationSet;
+
+        Set<Pair<String,String>> dfgRelations = unionRelationSet.getDFGRelations();
+        this.dfgAdjacencyMatrix = computeAdjacencyMatrix(dfgRelations);
+        if (parameterSetting.contains(1)){
+            //Self-exclusion / at most once
+            selfExclusion();
+        }
+
+        if (parameterSetting.contains(2)){
+            //precedence
+            precedence();
+        }
+
+        if (parameterSetting.contains(3)){
+            //notChainSuccession
+            notChainSuccession();
+        }
+
+        if (parameterSetting.contains(4)){
+            removeRedundantExcludes();
+        }
+        
+
+        for(Pair<String,String> exclude : excludeSet){
+            unionRelationSet.addDcrRelation(Triple.of(exclude.getLeft(), exclude.getRight(), DcrModel.RELATION.EXCLUDE));
+
+        }
+        for(Pair<String,String> include : includeSet){
+            unionRelationSet.addDcrRelation(Triple.of(include.getLeft(), include.getRight(), DcrModel.RELATION.INCLUDE));
+
+        }
+    }
 
     private void selfExclusion(){
         for (String activity : unionRelationSet.getUniqueActivities()){

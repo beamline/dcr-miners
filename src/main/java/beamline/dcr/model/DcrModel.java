@@ -19,8 +19,6 @@ public class DcrModel {
 		IMMRESPONSE,
 		DIRECTLOOP,
 		SEQUENCE;
-
-
 	}
 
 	private Set<Triple<String, String, RELATION>> relations = new HashSet<Triple<String, String, RELATION>>();
@@ -31,7 +29,6 @@ public class DcrModel {
 	public void addRelation(Triple<String, String, RELATION> relation) {
 		relations.add(relation);
 	}
-	
 	public Set<String> getActivities() {
 		Set<String> activities = new HashSet<String>();
 		for(Triple<String, String, RELATION> r : relations) {
@@ -43,15 +40,12 @@ public class DcrModel {
 
 
 	}
-	
 	public Set<Triple<String, String, RELATION>> getRelations() {
 		return relations;
 	}
-
 	public boolean containsRelation(Triple<String, String, RELATION> relation){
 		return relations.contains(relation);
 	}
-
 	public void removeRelation(String source, String target, RELATION relation){
 		relations.remove(Triple.of(source, target, relation));
 	}

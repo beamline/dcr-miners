@@ -25,11 +25,10 @@ public class ModelComparison {
     }
 
     public double getPrecision(){
-        int tp = getIntersectionSize();
-        int fp = originalDcrModel.getRelations().size() - tp;
+        double tp = getIntersectionSize();
+        double fp = originalDcrModel.getRelations().size() - tp;
 
-
-        return (double) (tp / (tp + fp));
+        return tp / (tp + fp);
     }
 
     private int getIntersectionSize(){
@@ -44,23 +43,23 @@ public class ModelComparison {
         return intersection;
     }
     public double getRecall(){
-        int tp = getIntersectionSize();
-        int fn = comparativeDcrModel.getRelations().size() - tp;
+        double tp = getIntersectionSize();
+        double fn = comparativeDcrModel.getRelations().size() - tp;
 
-        return (double) (tp / (tp + fn));
+        return tp / (tp + fn);
     }
 
     public double getJaccardSimilarity(){
 
-        int intersection = getIntersectionSize();
+        double intersection = getIntersectionSize();
 
-        int union = originalDcrModel.getRelations().size() - comparativeDcrModel.getRelations().size() - intersection;
+        double union = originalDcrModel.getRelations().size() + comparativeDcrModel.getRelations().size() - intersection;
 
         return intersection/union;
     }
 
-
-    private void loadComparativeModel(String xmlGraphPath) throws ParserConfigurationException, IOException, SAXException {
+    public void loadComparativeModel(String xmlGraphPath) throws ParserConfigurationException, IOException, SAXException {
+        this.comparativeDcrModel = new DcrModel();
         DocumentBuilderFactory factory =
                 DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -75,7 +74,6 @@ public class ModelComparison {
             if (event.getNodeName()=="event"){
                 Element eventElement = (Element) event;
             }
-
         }
 
         //Set constraints in unionRelationSet
@@ -105,7 +103,7 @@ public class ModelComparison {
                 String target = constraintElement.getAttribute("targetId");
 
                 DcrModel.RELATION relation = DcrModel.RELATION.valueOf(constraint.getNodeName().toUpperCase());
-                originalDcrModel.addRelation(Triple.of(source,target, relation));
+                this.comparativeDcrModel.addRelation(Triple.of(source,target, relation));
 
             }
         }
