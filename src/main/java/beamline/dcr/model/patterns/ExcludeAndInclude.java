@@ -36,7 +36,7 @@ public class ExcludeAndInclude implements RelationPattern {
         //notChainSuccession
         //notChainSuccession();
 
-        //removeRedundantExcludes();
+        removeRedundantExcludes();
 
         for(Pair<String,String> exclude : excludeSet){
             unionRelationSet.addDcrRelation(Triple.of(exclude.getLeft(), exclude.getRight(), DcrModel.RELATION.EXCLUDE));

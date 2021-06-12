@@ -126,10 +126,11 @@ public class TransitionSystem {
 
         for(int i = 0; i < eventList.size(); i++){
             if (marking[i].get(2)){
-                return false;
+                return true;
             }
         }
-        return true;
+
+        return false;
     }
     public void resetMarking(){
         createInitialMarking();
@@ -185,6 +186,7 @@ public class TransitionSystem {
 
             }
         }
+
     }
     private void addToRelationSet(NodeList constraintList){
         for(int i = 0; i < constraintList.getLength(); i++){

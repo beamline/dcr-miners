@@ -7,6 +7,8 @@ public class RelationDecoration {
 	public void addNewObservation() {
 		frequency++;
 	}
+
+	public void decrementFrequency(){frequency--;}
 	
 	public int getFrequency() {
 		return frequency;

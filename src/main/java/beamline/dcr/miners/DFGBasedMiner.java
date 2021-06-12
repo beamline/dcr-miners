@@ -11,9 +11,8 @@ import beamline.core.web.miner.models.MinerView;
 import beamline.core.web.miner.models.MinerViewRaw;
 import beamline.core.web.miner.models.MinerView.Type;
 import beamline.dcr.annotations.ExposedDcrPattern;
-import beamline.dcr.model.DcrModel;
+import beamline.dcr.model.*;
 import beamline.dcr.model.DcrModel.RELATION;
-import beamline.dcr.model.UnionRelationSet;
 import beamline.dcr.model.dfg.ActivityDecoration;
 import beamline.dcr.model.dfg.ExtendedDFG;
 import beamline.dcr.model.dfg.RelationDecoration;
@@ -30,18 +29,20 @@ import org.reflections.Reflections;
         description = "This miner discovers a DCR model form a DFG",
         //TODO: Get all RELATION values in defaultValue
         configurationParameters = {@ExposedMinerParameter(name = "DCR Patterns",
-                type = MinerParameter.Type.CHOICE, defaultValue = "ImmCondition, "),},
+                type = MinerParameter.Type.CHOICE, defaultValue = "Condition"),
+                @ExposedMinerParameter(name = "Data Storage",
+                        type = MinerParameter.Type.CHOICE, defaultValue = "Sliding Window"),
+                @ExposedMinerParameter(name = "Max Size Window",
+                        type = MinerParameter.Type.INTEGER, defaultValue = "20")
+        },
         viewParameters = {}
 )
 public class DFGBasedMiner extends AbstractMiner {
 
-    private Map<String, String> latestActivityInCase = new HashMap<String, String>();
-    private Map<String, Integer> indexInCase = new HashMap<String, Integer>();
-    private Map<String, Set<String>> observedActivitiesInCase = new HashMap<String, Set<String>>();
-    private ExtendedDFG extendedDFG = new ExtendedDFG();
 
     private Reflections reflections;
     private Set<Class<?>> dcrPatternClasses;
+    private DataStorage dataStorage;
 
 
     private String[] dcrPatternList;
@@ -53,46 +54,36 @@ public class DFGBasedMiner extends AbstractMiner {
     }
     @Override
     public void configure(Collection<MinerParameterValue> collection) {
+        String dataStorageString = "";
+        Integer windowMax = null;
         for(MinerParameterValue v : collection) {
             if (v.getName().equals("DCR Patterns")) {
                 this.dcrPatternList = (String[]) v.getValue();
+            }else if (v.getName().equals("Data Storage")){
+                dataStorageString = (String) v.getValue();
+            }else if (v.getName().equals("Max Size Window")){
+                windowMax = (Integer) v.getValue();
             }
+
+        }
+        switch (dataStorageString){
+            case "Sliding Window":
+                this.dataStorage = new SlidingWindowDataStorage(windowMax);
+            default:
+                this.dataStorage = new UnlimitedDataStorage();
         }
     }
 
     @Override
     public void consumeEvent(String caseID, String activityName) {
-        int currentIndex = 1;
-        if (indexInCase.containsKey(caseID)) {
-            currentIndex = indexInCase.get(caseID);
-        }
-        boolean firstOccurrance = true;
-        if (observedActivitiesInCase.containsKey(caseID)) {
-            if (observedActivitiesInCase.get(caseID).contains(activityName)) {
-                firstOccurrance = false;
-            } else {
-                observedActivitiesInCase.get(caseID).add(activityName);
-            }
-        } else {
-            observedActivitiesInCase.put(caseID, new HashSet<String>(Arrays.asList(activityName)));
-        }
+        this.dataStorage.observeEvent(caseID,activityName);
 
-        ActivityDecoration activityDecoration = extendedDFG.addActivityIfNeeded(activityName);
-        activityDecoration.addNewObservation(currentIndex, firstOccurrance);
-
-        if (latestActivityInCase.containsKey(caseID)) {
-            String previousActivity = latestActivityInCase.get(caseID);
-            RelationDecoration relationDecoration = extendedDFG.addRelationIfNeeded(previousActivity, activityName);
-            relationDecoration.addNewObservation();
-        }
-        latestActivityInCase.put(caseID, activityName);
-        indexInCase.put(caseID, currentIndex + 1);
     }
 
     @Override
     public List<MinerView> getViews(Collection<MinerParameterValue> collection) {
         List<MinerView> views = new ArrayList<>();
-
+        ExtendedDFG extendedDFG = dataStorage.getExtendedDFG();
         views.add(new MinerViewRaw("DFG", extendedDFG.toString()));
 
         //views.add(new MinerView("DCR", new DcrModelView(convert(extendedDFG)).toString(), Type.GRAPHVIZ));
@@ -131,11 +122,11 @@ public class DFGBasedMiner extends AbstractMiner {
         }
 
         //Post processing
-        /*c
+        TransitiveReduction transitiveReduction = new TransitiveReduction();
 
 
         transitiveReduction.reduce(unionRelationSet,RELATION.CONDITION);
-        transitiveReduction.reduce(unionRelationSet,RELATION.RESPONSE);*/
+        transitiveReduction.reduce(unionRelationSet,RELATION.RESPONSE);
 
         //project user selected patterns to DCR Model
         for (String dcrPattern : dcrPatternList){
@@ -216,7 +207,7 @@ public class DFGBasedMiner extends AbstractMiner {
     //For testsuite
 
     public ExtendedDFG getExtendedDFG() {
-        return extendedDFG;
+        return dataStorage.getExtendedDFG();
     }
 
 }

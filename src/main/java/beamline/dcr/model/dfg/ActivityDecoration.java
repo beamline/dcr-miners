@@ -21,6 +21,24 @@ public class ActivityDecoration {
 			avgFirstOccurrence = avgFirstOccurrence + ((currentIndex - avgFirstOccurrence) / observationsFirstOccurrance);
 		}
 	}
+	public void decrementDecorations(boolean firstOccurrence){
+		if (firstOccurrence){
+			avgFirstOccurrence = avgFirstOccurrence - (1 / observationsFirstOccurrance);
+		}
+		avgIndex = avgIndex - ( 1 / observations);
+	}
+	public void removeObservation(){
+		avgFirstOccurrence = avgFirstOccurrence * observationsFirstOccurrance / ( observationsFirstOccurrance - 1);
+		avgIndex = avgIndex * observations / ( observations - 1);
+
+		observations--;
+		observationsFirstOccurrance--;
+	}
+
+	public void incrementNumFirstObservations(){
+		observationsFirstOccurrance++;
+
+	}
 	public double getNumObservations() {
 		return observations;
 	}

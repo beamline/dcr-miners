@@ -3,21 +3,20 @@ package beamline.dcr.testsuite;
 import org.apache.commons.lang3.tuple.Pair;
 import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.*;
-import org.deckfour.xes.model.impl.XAttributeBooleanImpl;
-import org.deckfour.xes.out.XesXmlSerializer;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.*;
 
 public class ConformanceTesting {
 
-    private String eventLogPath;
+    private final String eventLogPath;
     private Double fitness;
     private Double precision;
+    private Set<String> illegalTraces;
 
     TransitionSystem transitionSystem;
 
     public ConformanceTesting(String eventLogPath, TransitionSystem transitionSystem) {
+        this.illegalTraces = new HashSet<>();
         this.eventLogPath = eventLogPath;
         this.transitionSystem = transitionSystem;
     }
@@ -28,8 +27,6 @@ public class ConformanceTesting {
 
         List<XLog> parsedXesFile = xesParser.parse(xesFile);
 
-        FileOutputStream fileOut = new FileOutputStream(eventLogPath+"_withComformance.xes");
-        XesXmlSerializer outputSerializer = new XesXmlSerializer();
         int illegalActions;
         int counter=1;
         double worstCaseCost = 0.0;
@@ -38,6 +35,7 @@ public class ConformanceTesting {
         double sumExecutableActivities = 0.0;
         for (XLog traces : parsedXesFile){
             for (XTrace trace : traces){
+                String traceId = trace.getAttributes().get("concept:name").toString();
                 Set<Pair<String,BitSet[]>> markingSet = new HashSet<>();
                 illegalActions = 0;
                 boolean traceIslegal = true;
@@ -55,17 +53,21 @@ public class ConformanceTesting {
                     sumExecutableActivities += transitionSystem.getEnabledEvents().size();
                     worstCaseCost ++;
                 }
-                if (transitionSystem.anyPendingEvents()){
-                    traceIslegal = false;
-                }
 
-                XAttribute xAttribute = new XAttributeBooleanImpl("pdc:isPos",traceIslegal);
+                /*if (transitionSystem.anyPendingEvents()){
+
+                    traceIslegal = false;
+                }*/
+
+                /*XAttribute xAttribute = new XAttributeBooleanImpl("pdc:isPos",traceIslegal);
                 XAttributeMap xMap =trace.getAttributes();
                 xMap.put("mapKey",xAttribute);
-                trace.setAttributes(xMap);
+                trace.setAttributes(xMap);*/
                 totalCost+=illegalActions;
-                //System.out.println("Trace: " + counter + "/" + traces.size() + " - illegal actions: " + illegalActions + "/" + trace.size() +
-                //"- Pending state at completion: " + String.valueOf(transitionSystem.anyPendingEvents()));
+
+                if (!traceIslegal){
+                    this.illegalTraces.add(traceId);
+                }
                 transitionSystem.resetMarking();
                 counter++;
 
@@ -83,5 +85,9 @@ public class ConformanceTesting {
 
     public Double getPrecision() {
         return precision;
+    }
+
+    public Set<String> getIllegalTraces(){
+        return illegalTraces;
     }
 }

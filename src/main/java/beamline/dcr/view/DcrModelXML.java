@@ -40,9 +40,6 @@ public class DcrModelXML {
     public void toFile(String fileName)  {
         //Skeleton from https://documentation.dcr.design/wp-content/uploads/DCR%20Import/DCRImport.xml
         try {
-
-
-
             // root element
             Element root = document.createElement("dcrgraph");
             root.setAttribute("title","DCR");

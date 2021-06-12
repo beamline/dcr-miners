@@ -35,7 +35,18 @@ public class ExtendedDFG {
 		relations.put(relation, decoration);
 		return decoration;
 	}
-	
+	public RelationDecoration getRelation(Pair<String, String> relationPair){
+		return relations.get(relationPair);
+	}
+	public void decrementRelationFrequency(Pair<String, String> relationPair){
+		RelationDecoration relationDecoration = relations.get(relationPair);
+		int frequency = relationDecoration.getFrequency();
+		if(frequency<=1){
+			relations.remove(relationPair);
+		}else{
+			relationDecoration.decrementFrequency();
+		}
+	}
 	public Set<String> getActivities() {
 		return activities.keySet();
 	}

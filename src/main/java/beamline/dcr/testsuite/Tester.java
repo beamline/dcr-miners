@@ -1,6 +1,6 @@
 package beamline.dcr.testsuite;
 
-import beamline.core.miner.exceptions.MinerException;
+
 import beamline.core.web.miner.models.MinerParameterValue;
 import beamline.core.web.miner.models.MinerView;
 import beamline.core.web.miner.models.Stream;
@@ -11,10 +11,8 @@ import beamline.dcr.model.UnionRelationSet;
 import beamline.dcr.model.dfg.ExtendedDFG;
 import beamline.dcr.model.patterns.Condition;
 import beamline.dcr.model.patterns.ExcludeAndInclude;
-import beamline.dcr.model.patterns.RelationPattern;
 import beamline.dcr.model.patterns.Response;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
@@ -27,7 +25,7 @@ import java.util.*;
 public class Tester {
 
 	public static void main(String[] args) throws Exception {
-		String eventlogNumber = "2";
+		String eventlogNumber = "25";
 		String rootPath = System.getProperty("user.dir");
 		String currentPath = rootPath + "/src/main/java/beamline/dcr/testsuite";
 
@@ -35,7 +33,7 @@ public class Tester {
 
 		Collection<MinerParameterValue> coll = new ArrayList<>();
 
-		String[] patternList = {"Condition","Response","Exclude"};
+		String[] patternList = {"Condition","Response"};
 		MinerParameterValue confParam = new MinerParameterValue("DCR Patterns", patternList);
 		coll.add(confParam);
 
@@ -46,8 +44,9 @@ public class Tester {
 		sc.setStream(new Stream("test", "localhost", ""));
 		sc.start();
 
-		//String eventLog = "/eventlogs/test2005/Graph"+eventlogNumber+"/eventlog_graph25.xes";
+
 		String eventLog = "/eventlogs/eventlog_graph"+eventlogNumber+ ".xes";
+		String eventLogIllegal = "/eventlogs/eventlog_graph"+eventlogNumber+ "_illegal.xes";
 		File xesFile = new File(currentPath + eventLog);
 		XesXmlParser xesParser = new XesXmlParser();
 
@@ -64,7 +63,7 @@ public class Tester {
 			}
 		}
 
-		
+
 		List<MinerView> views = sc.getViews(coll);
 
 		/*System.out.println("\n\n++++++++++++++++++++++++++++++++");
@@ -123,23 +122,13 @@ public class Tester {
 			highestPerformanceList.add(Pair.of("",0.0));
 		}
 
+		UnionRelationSet bestModel = null;
 
 		String groundTruthModelPath = currentPath + "/groundtruthmodels/Process" + eventlogNumber +".xml";
 		String discoverModelPath = currentPath + "/discovermodels/DCR_graph" + eventlogNumber +".xml";
+		String comparePath = groundTruthModelPath;
 
-		String outputDirectoryPath = currentPath + "/evaluations/"+ eventlogNumber;
-		File outputDirectoryObject = new File(outputDirectoryPath);
-		if (!outputDirectoryObject.exists()){
-			outputDirectoryObject.mkdirs();
-		}
-		String outputFile = outputDirectoryPath +"/performance_test.csv";
 		StringBuilder csvText = new StringBuilder();
-		File myObj = new File(outputFile);
-
-		myObj.createNewFile();
-		String title = "constraints,model_jaccard,model_precision,model_recall,log_fitness,log_precision\n";
-		writeMetricsToFile(outputFile,title);
-
 		Set<String> checkedCombinations = new HashSet<>();
 
 		UnionRelationSet unionRelationSet;
@@ -156,7 +145,6 @@ public class Tester {
 						containsCondition = false;
 						containsResponse = false;
 						for (String pattern : relationPatterns) {
-
 							patternCombination.append(pattern);
 							switch (pattern) {
 								case "Condition":
@@ -203,8 +191,8 @@ public class Tester {
 							dcrModel = new DcrModel();
 							dcrModel.addRelations(unionRelationSet.getDcrRelations());
 
-							List<Double> performanceList = getImperativeEvaluationString(dcrModel, unionRelationSet, discoverModelPath,
-									currentPath + eventLog);
+							List<Double> performanceList = getImperativeEvaluationString(dcrModel, unionRelationSet,
+									comparePath, currentPath + eventLog);
 							StringBuilder performanceString = new StringBuilder();
 							for (int i = 0; i < performanceList.size(); i++){
 								double performanceValue = performanceList.get(i);
@@ -213,6 +201,7 @@ public class Tester {
 										(highestPerformanceList.get(i).getRight().equals(performanceValue)
 												&& highestPerformanceList.get(i).getLeft().length() > patternCombination.length())){
 									highestPerformanceList.set(i, Pair.of(patternCombination.toString(),performanceValue));
+									bestModel = unionRelationSet;
 								}
 
 								//Add to file
@@ -228,12 +217,46 @@ public class Tester {
 
 		}
 
+		//Save results
+		/*String outputDirectoryPath = currentPath + "/evaluations/"+ eventlogNumber;
+		File outputDirectoryObject = new File(outputDirectoryPath);
+		if (!outputDirectoryObject.exists()){
+			outputDirectoryObject.mkdirs();
+		}
+		String outputFile = outputDirectoryPath +"/performance_test.csv";
+
+		File myObj = new File(outputFile);
+
+		myObj.createNewFile();
+		String title = "constraints,model_jaccard,model_precision,model_recall,log_fitness,log_precision\n";
+		writeMetricsToFile(outputFile,title);
+
 		writeMetricsToFile(outputFile,csvText.toString());
-
 		PlotResults plotResults = new PlotResults(outputFile);
+		plotResults.saveScatterPlot(outputDirectoryPath);*/
 
-		plotResults.saveScatterPlot(outputDirectoryPath);
 		printBestPerformingCombination(highestPerformanceList);
+		TransitionSystem transitionSystem= new TransitionSystem(bestModel);
+		ConformanceTesting conformanceTesting = new ConformanceTesting(currentPath + eventLog, transitionSystem);
+		conformanceTesting.checkConformance();
+		Set<String> illegalTraces = conformanceTesting.getIllegalTraces();
+		System.out.println("Illegal traces: ");
+		for(String illTrace : illegalTraces){
+			System.out.print(illTrace + " ");
+		}
+		System.out.println("");
+
+		/*TransitionSystem transitionSystemComparable = new TransitionSystem(discoverModelPath);
+		ConformanceTesting conformanceTestingComparable = new ConformanceTesting(currentPath + eventLog, transitionSystemComparable);
+		conformanceTestingComparable.checkConformance();
+
+		System.out.println("Illegal traces comparable: ");
+		for(String illTrace : conformanceTestingComparable.getIllegalTraces()){
+			System.out.print(illTrace + " ");
+		}
+		System.out.println("Compare fitness: " + conformanceTestingComparable.getFitness());
+		System.out.println("Compare Precision: " + conformanceTestingComparable.getPrecision());*/
+
 		sc.stop();
 		System.exit(0);
 
@@ -242,13 +265,13 @@ public class Tester {
 
 	private static List<Double> getImperativeEvaluationString
 			(DcrModel dcrModel, UnionRelationSet unionRelationSet,
-			 String groundTruthFilePath, String eventLogFilePath) throws Exception {
+			 String CompareFilePath, String eventLogFilePath) throws Exception {
 		//model_jaccard,model_precision,model_recall, Log_fitness,Log_precision
 
 		TransitionSystem transitionSystem = new TransitionSystem(unionRelationSet);
 
 		ModelComparison modelComparison = new ModelComparison(dcrModel);
-		modelComparison.loadComparativeModel(groundTruthFilePath);
+		modelComparison.loadComparativeModel(CompareFilePath);
 
 		ConformanceTesting conformanceTesting = new ConformanceTesting(eventLogFilePath, transitionSystem);
 		conformanceTesting.checkConformance();
