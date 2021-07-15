@@ -1,6 +1,6 @@
 package beamline.dcr.view;
 
-import beamline.dcr.model.DcrModel;
+import beamline.dcr.model.relations.DcrModel;
 import org.apache.commons.lang3.tuple.Triple;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

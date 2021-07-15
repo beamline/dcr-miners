@@ -1,4 +1,4 @@
-package beamline.dcr.testsuite;
+package beamline.dcr.testsoftware;
 
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.w3c.dom.Document;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class DcrApiCommunicator {
-
+/* Not used atm*/
     private String modelId;
     private String instanceId;
 
@@ -181,7 +181,7 @@ public class DcrApiCommunicator {
     private String getAuthorizationFromFile(){
         try {
 
-            File myObj = new File("src/main/java/beamline/dcr/testsuite/ApiAuthorization.txt");
+            File myObj = new File("src/main/java/beamline/dcr/testsoftware/ApiAuthorization.txt");
             Scanner myReader = new Scanner(myObj);
             String authenticationString ="";
             while (myReader.hasNextLine()) {

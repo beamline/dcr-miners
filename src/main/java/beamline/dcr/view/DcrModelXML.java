@@ -1,6 +1,7 @@
 package beamline.dcr.view;
 
-import beamline.dcr.model.DcrModel;
+import beamline.dcr.model.relations.DcrModel;
+import beamline.dcr.model.relations.dfg.ExtendedDFG;
 import org.apache.commons.lang3.tuple.Triple;
 import java.io.File;
 import javax.xml.parsers.DocumentBuilder;
@@ -12,7 +13,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.w3c.dom.Attr;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -20,10 +21,12 @@ public class DcrModelXML {
 
     private DcrModel model;
     private Document document;
+    private ExtendedDFG extendedDFG;
 
-    public DcrModelXML(DcrModel model) {
+    public DcrModelXML(DcrModel model, ExtendedDFG extendedDFG) {
 
         this.model = model;
+        this.extendedDFG = extendedDFG;
         DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 
         DocumentBuilder documentBuilder = null;
@@ -86,7 +89,7 @@ public class DcrModelXML {
         Element included = document.createElement("included");
         marking.appendChild(included);
         marking.appendChild(document.createElement("pendingResponses"));
-        for (String event : model.getActivities()){
+        for (String event : extendedDFG.getActivities()){
             Element eventElement = document.createElement("event");
             Element customEvent = document.createElement("custom");
             Element visualization = document.createElement("visualization");

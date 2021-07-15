@@ -1,4 +1,4 @@
-package beamline.dcr.testsuite;
+package beamline.dcr.testsoftware;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;

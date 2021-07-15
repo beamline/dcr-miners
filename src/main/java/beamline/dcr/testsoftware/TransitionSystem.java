@@ -1,8 +1,8 @@
-package beamline.dcr.testsuite;
+package beamline.dcr.testsoftware;
 
-import beamline.dcr.model.DcrModel;
-import beamline.dcr.model.UnionRelationSet;
-import beamline.dcr.model.dfg.ExtendedDFG;
+import beamline.dcr.model.relations.DcrModel;
+import beamline.dcr.model.relations.UnionRelationSet;
+import beamline.dcr.model.relations.dfg.ExtendedDFG;
 import org.apache.commons.lang3.tuple.Triple;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -35,6 +35,7 @@ public class TransitionSystem {
         createInitialMarking();
 
 
+
     }
 
     private void createInitialMarking(){
@@ -46,7 +47,7 @@ public class TransitionSystem {
         }
     }
 
-    public List<String> getEnabledEvents(){
+    public List<String> getEnabledEvents() throws Exception {
 
         List<String> includedEvents = getIncludedEvents();
         List<String> enabledEvents = new ArrayList<>();
@@ -60,11 +61,12 @@ public class TransitionSystem {
             enabledEvents.add(event);
 
             //get constraints where activity is target in condition
-            Set<Triple<String,String, DcrModel.RELATION>> conditionWithEventTarget = unionRelationSet.getDcrRelationwithTarget(event, DcrModel.RELATION.CONDITION);
+            Set<Triple<String,String, DcrModel.RELATION>> conditionWithEventTarget = unionRelationSet.getDcrRelationWithTarget(event, DcrModel.RELATION.CONDITION);
 
             for (Triple<String,String, DcrModel.RELATION> relation : conditionWithEventTarget){
                 String source = relation.getLeft();
-                if(!isExecuted(source)) {
+
+                if(!isExecuted(source) && isIncluded(source)) {
                     enabledEvents.remove(event);
                 }
             }
@@ -80,7 +82,7 @@ public class TransitionSystem {
         }
         return includedEvents;
     }
-    public boolean executeEvent(String event){
+    public boolean executeEvent(String event) throws Exception {
         String enabledString = "";
         for(int i = 0; i < getEnabledEvents().size(); i++){
             enabledString = enabledString + ", " + getEnabledEvents().get(i);
@@ -95,20 +97,20 @@ public class TransitionSystem {
 
             //Change marking
             //Responses with event as source - target -> pending
-            for(Triple<String,String, DcrModel.RELATION> relation : unionRelationSet.getDcrRelationwithSource(event, DcrModel.RELATION.RESPONSE)){
+            for(Triple<String,String, DcrModel.RELATION> relation : unionRelationSet.getDcrRelationWithSource(event, DcrModel.RELATION.RESPONSE)){
                 String target = relation.getMiddle();
                 int targetIndexEventList = eventList.indexOf(target);
                 marking[targetIndexEventList].set(2);
             }
 
             //excluded with event as source - target -> excluded
-            for(Triple<String,String, DcrModel.RELATION> relation : unionRelationSet.getDcrRelationwithSource(event, DcrModel.RELATION.EXCLUDE)){
+            for(Triple<String,String, DcrModel.RELATION> relation : unionRelationSet.getDcrRelationWithSource(event, DcrModel.RELATION.EXCLUDE)){
                 String target = relation.getMiddle();
                 int targetIndexEventList = eventList.indexOf(target);
                 marking[targetIndexEventList].set(1,false);
             }
             //included with event as source - target -> included
-            for(Triple<String,String, DcrModel.RELATION> relation : unionRelationSet.getDcrRelationwithSource(event, DcrModel.RELATION.INCLUDE)){
+            for(Triple<String,String, DcrModel.RELATION> relation : unionRelationSet.getDcrRelationWithSource(event, DcrModel.RELATION.INCLUDE)){
                 String target = relation.getMiddle();
                 int targetIndexEventList = eventList.indexOf(target);
                 marking[targetIndexEventList].set(1);
@@ -118,9 +120,19 @@ public class TransitionSystem {
             return false;
         }
     }
-    public boolean isExecuted(String event){
+    public boolean isExecuted(String event) throws Exception {
         int eventIndex = eventList.indexOf(event);
+        try{
+            marking[eventIndex].get(0);
+        }catch (Exception e){
+            System.out.println(event);
+            System.out.println(eventList);
+        }
         return marking[eventIndex].get(0);
+    }
+    public boolean isIncluded(String event){
+        int eventIndex = eventList.indexOf(event);
+        return marking[eventIndex].get(1);
     }
     public boolean anyPendingEvents(){
 
@@ -135,7 +147,7 @@ public class TransitionSystem {
     public void resetMarking(){
         createInitialMarking();
     }
-    public int getExecutedOfEnabled(){
+    public int getExecutedOfEnabled() throws Exception {
         List<String> enabledEvents = getEnabledEvents();
         int numExecuted = 0;
 
@@ -164,8 +176,9 @@ public class TransitionSystem {
 
         for (int i = 0; i < eventList.getLength(); i++) {
             Node event = eventList.item(i);
-            if (event.getNodeName()=="event"){
-                Element eventElement = (Element) event;
+            Element eventElement = null;
+            if (event.getNodeName().equals("event")){
+                 eventElement = (Element) event;
                 String id = eventElement.getAttribute("id");
                 this.eventList.add(id);
             }
@@ -188,6 +201,7 @@ public class TransitionSystem {
         }
 
     }
+
     private void addToRelationSet(NodeList constraintList){
         for(int i = 0; i < constraintList.getLength(); i++){
             Node constraint = constraintList.item(i);

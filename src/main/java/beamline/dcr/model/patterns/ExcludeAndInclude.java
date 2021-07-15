@@ -1,9 +1,9 @@
 package beamline.dcr.model.patterns;
 
 
-import beamline.dcr.model.DcrModel;
-import beamline.dcr.model.UnionRelationSet;
-import beamline.dcr.model.dfg.ActivityDecoration;
+import beamline.dcr.model.relations.DcrModel;
+import beamline.dcr.model.relations.UnionRelationSet;
+import beamline.dcr.model.relations.dfg.ActivityDecoration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -34,7 +34,7 @@ public class ExcludeAndInclude implements RelationPattern {
         precedence();
 
         //notChainSuccession
-        //notChainSuccession();
+        notChainSuccession();
 
         removeRedundantExcludes();
 
@@ -47,6 +47,7 @@ public class ExcludeAndInclude implements RelationPattern {
 
         }
     }
+    //For framework setting test
     public void populateConstraint(UnionRelationSet unionRelationSet,Set<Integer> parameterSetting) {
         this.activityList = new ArrayList<>(Arrays.asList(unionRelationSet.getUniqueActivities()));
         this.excludeSet = new HashSet<>();
@@ -73,7 +74,7 @@ public class ExcludeAndInclude implements RelationPattern {
         if (parameterSetting.contains(4)){
             removeRedundantExcludes();
         }
-        
+
 
         for(Pair<String,String> exclude : excludeSet){
             unionRelationSet.addDcrRelation(Triple.of(exclude.getLeft(), exclude.getRight(), DcrModel.RELATION.EXCLUDE));
@@ -95,48 +96,27 @@ public class ExcludeAndInclude implements RelationPattern {
     }
 
     private void precedence(){
+        Set<Triple<String, String, DcrModel.RELATION>> dcrSequences =
+                unionRelationSet.getDcrRelationWithPattern(DcrModel.RELATION.SEQUENCE);
 
-        //TODO refactor reused
-        String[] listOfActivities = unionRelationSet.getUniqueActivities();
-
-        //check precedence
-        for (int i = 0; i<listOfActivities.length; i++){
-            for (int j = i+1; j<listOfActivities.length; j++){
-                String activity1 = listOfActivities[i];
-                ActivityDecoration decoration1 = unionRelationSet.getActivityDecoration(activity1);
-                String activity2 = listOfActivities[j];
-                ActivityDecoration decoration2 = unionRelationSet.getActivityDecoration(activity2);
-
-                if (decoration1.getAverageFirstOccurrence()<decoration2.getAverageFirstOccurrence() &
-                        decoration1.getAverageIndex()<decoration2.getAverageIndex()){
-                    //alternate precedence
-                    if (decoration1.getNumObservations()==decoration2.getNumObservations()){
-                        this.excludeSet.add(Pair.of(activity2,activity2));
-                        this.includeSet.add(Pair.of(activity1,activity2));
-                    }
-                    //precedence not successor
-                    if(!excludeSet.contains(Pair.of(activity1,activity1))){
-                        this.excludeSet.add(Pair.of(activity2,activity1));
-                    }
-                }
-                else if (decoration2.getAverageFirstOccurrence()<decoration1.getAverageFirstOccurrence() &
-                        decoration2.getAverageIndex()<decoration1.getAverageIndex()){
-                    //alternate precedence
-                    if (decoration1.getNumObservations()==decoration2.getNumObservations()){
-                        this.excludeSet.add(Pair.of(activity1,activity1));
-                        this.includeSet.add(Pair.of(activity2,activity1));
-                    }
-                    //precedence not successor
-                    if(!excludeSet.contains(Pair.of(activity2,activity2))){
-                        this.excludeSet.add(Pair.of(activity1,activity2));
-                    }
-                }
+        for (Triple<String, String, DcrModel.RELATION> sequence : dcrSequences) {
+            String source = sequence.getLeft();
+            ActivityDecoration sourceDecoration = unionRelationSet.getActivityDecoration(source);
+            String target = sequence.getMiddle();
+            ActivityDecoration targetDecoration = unionRelationSet.getActivityDecoration(target);
+            if (sourceDecoration.getNumObservations() == targetDecoration.getNumObservations()) {
+                this.excludeSet.add(Pair.of(target, target));
+                this.includeSet.add(Pair.of(source, target));
             }
+            //precedence not successor
+            if (!excludeSet.contains(Pair.of(source, source))) {
+                this.excludeSet.add(Pair.of(target, source));
+            }
+
         }
     }
 
     private void notChainSuccession(){
-
         for (int i = 0; i < dfgAdjacencyMatrix.length; i++){
             for (int j = 0; j < dfgAdjacencyMatrix.length; j++){
                 if (!dfgAdjacencyMatrix[i].get(j) & i != j){
@@ -146,17 +126,14 @@ public class ExcludeAndInclude implements RelationPattern {
                     Set<String> inBetween = getActivitiesBetween(i,j);
 
                     for(String activityBetween : inBetween){
-
                         this.includeSet.add(Pair.of(activityBetween,activityList.get(j)));
                     }
                 }
             }
         }
-
     }
 
     private BitSet[] computeAdjacencyMatrix(Set<Pair<String,String>>  relationSet){
-
         BitSet[] matrix = new BitSet[activityList.size()];
         for(int i = 0; i < matrix.length; i++) {
             matrix[i] = new BitSet(activityList.size());
@@ -168,7 +145,6 @@ public class ExcludeAndInclude implements RelationPattern {
             int i2 = activityList.indexOf(tar);
             matrix[i1].set(i2);
         }
-
         return matrix;
     }
 
@@ -191,7 +167,6 @@ public class ExcludeAndInclude implements RelationPattern {
     }
 
     private BitSet[] deepCopyBitSet(BitSet[] bitSet){
-
         BitSet[] newBitSet = new BitSet[bitSet.length];
         for(int i = 0; i < bitSet.length; i++) {
             newBitSet[i] = new BitSet(activityList.size());
@@ -206,34 +181,24 @@ public class ExcludeAndInclude implements RelationPattern {
     private void removeRedundantExcludes(){
 
         BitSet[] adjacencyMatrixExcludes = computeAdjacencyMatrix(excludeSet);
+        Set<Triple<String, String, DcrModel.RELATION>> dcrSequences =
+                unionRelationSet.getDcrRelationWithPattern(DcrModel.RELATION.SEQUENCE);
 
-        for (int i = 0; i<activityList.size(); i++){
-            for (int j = 0; j<activityList.size(); j++){
-                if (i==j){
-                    continue;
-                }
-                String activity1 = activityList.get(i);
-                ActivityDecoration decoration1 = unionRelationSet.getActivityDecoration(activity1);
-                String activity2 = activityList.get(j);
-                ActivityDecoration decoration2 = unionRelationSet.getActivityDecoration(activity2);
+        for (Triple<String, String, DcrModel.RELATION> sequence : dcrSequences) {
+            int sourceIndex = activityList.indexOf(sequence.getLeft());
+            int targetIndex = activityList.indexOf(sequence.getMiddle());
 
-                //if activity 1 always precedes activity 2
-                if (decoration1.getAverageFirstOccurrence()<decoration2.getAverageFirstOccurrence() &
-                        decoration1.getAverageIndex()<decoration2.getAverageIndex()) {
+            Set<String> activitiesBetween = getActivitiesBetween(sourceIndex,targetIndex);
 
-                    Set<String> activitiesBetween = getActivitiesBetween(i,j);
-                    // if exclude(a1,a3)
-                    for (int k = 0; k < activityList.size(); k++){
-                        if (adjacencyMatrixExcludes[i].get(k) & adjacencyMatrixExcludes[j].get(k)){
-
-                            String sink = activityList.get(k);
-                            for (String activityBetween : activitiesBetween){
-                                //And there is no include(u,a3) where u is between a1,a2
-                                if(!includeSet.contains(Pair.of(activityBetween,sink))){
-                                    // exclude(a2,a3) is redundant
-                                    excludeSet.remove(Pair.of(activity2,sink));
-                                }
-                            }
+            for (int k = 0; k < activityList.size(); k++){
+                // if exclude(a1,a3) and exlude(a2,a3)
+                if (adjacencyMatrixExcludes[sourceIndex].get(k) & adjacencyMatrixExcludes[targetIndex].get(k)){
+                    String sink = activityList.get(k);
+                    for (String activityBetween : activitiesBetween){
+                        //And there is no include(u,a3) where u is between a1,a2
+                        if(!includeSet.contains(Pair.of(activityBetween,sink))){
+                            // exclude(a2,a3) is redundant
+                            excludeSet.remove(Pair.of(sequence.getMiddle(),sink));
                         }
                     }
                 }

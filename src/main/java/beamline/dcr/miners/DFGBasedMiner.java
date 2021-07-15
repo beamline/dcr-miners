@@ -12,16 +12,22 @@ import beamline.core.web.miner.models.MinerViewRaw;
 import beamline.core.web.miner.models.MinerView.Type;
 import beamline.dcr.annotations.ExposedDcrPattern;
 import beamline.dcr.model.*;
-import beamline.dcr.model.DcrModel.RELATION;
-import beamline.dcr.model.dfg.ActivityDecoration;
-import beamline.dcr.model.dfg.ExtendedDFG;
-import beamline.dcr.model.dfg.RelationDecoration;
+import beamline.dcr.model.relations.DcrModel;
+import beamline.dcr.model.relations.DcrModel.RELATION;
+import beamline.dcr.model.relations.dfg.ExtendedDFG;
 import beamline.dcr.model.patterns.RelationPattern;
+import beamline.dcr.model.relations.UnionRelationSet;
+import beamline.dcr.model.streamminers.SlidingWindowStreamMiner;
+import beamline.dcr.model.streamminers.StreamMiner;
+import beamline.dcr.model.streamminers.UnlimitedStreamMiner;
 import beamline.dcr.view.DcrModelText;
+import beamline.dcr.view.DcrModelView;
 import beamline.dcr.view.DcrModelXML;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.reflections.Reflections;
+
+import javax.xml.transform.TransformerException;
 
 
 @ExposedMiner(
@@ -29,24 +35,33 @@ import org.reflections.Reflections;
         description = "This miner discovers a DCR model form a DFG",
         //TODO: Get all RELATION values in defaultValue
         configurationParameters = {@ExposedMinerParameter(name = "DCR Patterns",
-                type = MinerParameter.Type.CHOICE, defaultValue = "Condition"),
-                @ExposedMinerParameter(name = "Data Storage",
-                        type = MinerParameter.Type.CHOICE, defaultValue = "Sliding Window"),
+                type = MinerParameter.Type.CHOICE, defaultValue = "Condition;Response;Exclude;Include"),
+                @ExposedMinerParameter(name = "Stream Miner",
+                        type = MinerParameter.Type.CHOICE, defaultValue = "Sliding Window;Infinite Memory"),
                 @ExposedMinerParameter(name = "Max Size Window",
-                        type = MinerParameter.Type.INTEGER, defaultValue = "20")
+                        type = MinerParameter.Type.INTEGER, defaultValue = "20"),
+                @ExposedMinerParameter(name = "Transitive Reduction",
+                        type = MinerParameter.Type.CHOICE, defaultValue = "Condition;Response"),
+                @ExposedMinerParameter(name = "Relations Threshold",
+                        type = MinerParameter.Type.INTEGER, defaultValue = "0")
         },
         viewParameters = {}
 )
 public class DFGBasedMiner extends AbstractMiner {
+    //Not configured with XML download to beamline
+    //XML view only works locally from testrunners
 
 
     private Reflections reflections;
     private Set<Class<?>> dcrPatternClasses;
-    private DataStorage dataStorage;
+    private StreamMiner streamMiner;
+    private UnionRelationSet unionRelationSet;
+    private Integer relationsThreshold;
+    private String[] transReductionList;
 
 
     private String[] dcrPatternList;
-    private Set<String> postorderTraversal = new LinkedHashSet<>();
+    private Set<String> postorderTraversal;
 
     public DFGBasedMiner(){
         this.reflections = new Reflections("beamline");
@@ -54,90 +69,94 @@ public class DFGBasedMiner extends AbstractMiner {
     }
     @Override
     public void configure(Collection<MinerParameterValue> collection) {
-        String dataStorageString = "";
+        String streamMiningType = "";
         Integer windowMax = null;
         for(MinerParameterValue v : collection) {
-            if (v.getName().equals("DCR Patterns")) {
-                this.dcrPatternList = (String[]) v.getValue();
-            }else if (v.getName().equals("Data Storage")){
-                dataStorageString = (String) v.getValue();
-            }else if (v.getName().equals("Max Size Window")){
-                windowMax = (Integer) v.getValue();
+            switch (v.getName()) {
+                case "DCR Patterns":
+                    this.dcrPatternList = (String[]) v.getValue();
+                    break;
+                case "Stream Miner":
+                    streamMiningType = (String) v.getValue();
+                    break;
+                case "Max Size Window":
+                    windowMax = (Integer) v.getValue();
+                    break;
+                case "Transitive Reduction":
+                    this.transReductionList = (String[]) v.getValue();
+                    break;
+                case "Relations Threshold":
+                    this.relationsThreshold = (Integer) v.getValue();
+                    break;
             }
 
         }
-        switch (dataStorageString){
+        switch (streamMiningType){
+
             case "Sliding Window":
-                this.dataStorage = new SlidingWindowDataStorage(windowMax);
+                this.streamMiner = new SlidingWindowStreamMiner(windowMax);
+                break;
             default:
-                this.dataStorage = new UnlimitedDataStorage();
+                this.streamMiner = new UnlimitedStreamMiner();
         }
     }
 
     @Override
     public void consumeEvent(String caseID, String activityName) {
-        this.dataStorage.observeEvent(caseID,activityName);
+        this.streamMiner.observeEvent(caseID,activityName);
 
     }
 
     @Override
     public List<MinerView> getViews(Collection<MinerParameterValue> collection) {
         List<MinerView> views = new ArrayList<>();
-        ExtendedDFG extendedDFG = dataStorage.getExtendedDFG();
+        ExtendedDFG extendedDFG = streamMiner.getExtendedDFG();
         views.add(new MinerViewRaw("DFG", extendedDFG.toString()));
+        DcrModel dcrModelConverted = getDcrModel();
+        if (dcrModelConverted != null){
+            views.add(new MinerView("Textural", new DcrModelText(dcrModelConverted).toString(), Type.RAW));
 
-        //views.add(new MinerView("DCR", new DcrModelView(convert(extendedDFG)).toString(), Type.GRAPHVIZ));
-        try {
-            //set of SESE's
-            //each SESE
-            DcrModel dcrModelConverted = convert(extendedDFG);
-            views.add(new MinerView("DCR", new DcrModelText(dcrModelConverted).toString(), Type.RAW));
-            //write Json
+            views.add(new MinerView("DCR", new DcrModelView(dcrModelConverted).toString(), Type.GRAPHVIZ));
+            //miner parameter from local testrun to save XML
             for(MinerParameterValue v : collection) {
                 if (v.getName().equals("filename")) {
-                    //new DcrModelJson(dcrModelConverted).toFile(v.getValue().toString());
-                    new DcrModelXML(dcrModelConverted).toFile(v.getValue().toString());
+                    new DcrModelXML(dcrModelConverted,extendedDFG).toFile(v.getValue().toString());
                 }
             }
-
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
         }
+
         return views;
     }
 
 
-    private DcrModel convert(ExtendedDFG dfg) throws IllegalAccessException, InstantiationException {
+    public DcrModel convert(ExtendedDFG dfg) throws IllegalAccessException, InstantiationException {
         DcrModel model = new DcrModel();
+        this.postorderTraversal= new LinkedHashSet<>();
 
-        int DFGThreshold = 0;  //Can be input in convert
 
-        UnionRelationSet unionRelationSet = new UnionRelationSet(dfg,DFGThreshold);
+        this.unionRelationSet = new UnionRelationSet(dfg,relationsThreshold);
 
-        //Create set of patterns to mine
         for (String originalPattern : dcrPatternList){
-            minePatternsFromPostOrderDependencies(originalPattern,unionRelationSet);
+
+            minePatternsFromPostOrderDependencies(originalPattern);
         }
 
-        //Post processing
         TransitiveReduction transitiveReduction = new TransitiveReduction();
 
-
-        transitiveReduction.reduce(unionRelationSet,RELATION.CONDITION);
-        transitiveReduction.reduce(unionRelationSet,RELATION.RESPONSE);
-
+        for (String transReduce : transReductionList){
+            RELATION enumPattern = RELATION.valueOf(transReduce.toUpperCase());
+            transitiveReduction.reduce(unionRelationSet,enumPattern);
+        }
         //project user selected patterns to DCR Model
         for (String dcrPattern : dcrPatternList){
             RELATION enumPattern = RELATION.valueOf(dcrPattern.toUpperCase());
-            Set<Triple<String, String, RELATION>> minedPatterns = unionRelationSet.getDcrRelationWithPattern(enumPattern);
-            model.addRelations(minedPatterns);
+            Set<Triple<String, String, RELATION>> minedConstraints = unionRelationSet.getDcrRelationWithPattern(enumPattern);
+            model.addRelations(minedConstraints);
         }
-
         return model;
+
     }
-    private void minePatternsFromPostOrderDependencies(String root, UnionRelationSet unionRelationSet) throws IllegalAccessException, InstantiationException {
+    private void minePatternsFromPostOrderDependencies(String root) throws IllegalAccessException, InstantiationException {
         int currentRootIndex = 0;
         Stack<Pair> stack = new Stack<>();
 
@@ -158,18 +177,18 @@ public class DFGBasedMiner extends AbstractMiner {
             }
 
             Pair temp = stack.pop();
+
             if (!postorderTraversal.contains(temp.getLeft().toString())){
-                minePattern(temp.getLeft().toString(),unionRelationSet);
+                minePattern(temp.getLeft().toString());
                 postorderTraversal.add(temp.getLeft().toString());
 
             }
-            //postorderTraversal.add(temp.getLeft().toString());
 
             while (!stack.isEmpty() && (int) temp.getRight() ==
                     getDcrDependencies(stack.peek().getLeft().toString()).length - 1){
                 temp = stack.pop();
                 if (!postorderTraversal.contains(temp.getLeft().toString())){
-                    minePattern(temp.getLeft().toString(),unionRelationSet);
+                    minePattern(temp.getLeft().toString());
                     postorderTraversal.add(temp.getLeft().toString());
 
                 }
@@ -199,15 +218,33 @@ public class DFGBasedMiner extends AbstractMiner {
         return null;
 
     }
-    private void minePattern(String patternName,UnionRelationSet unionRelationSet) throws InstantiationException, IllegalAccessException {
+    private void minePattern(String patternName) throws InstantiationException, IllegalAccessException {
         RelationPattern patternToMine = getPatternMinerClass(patternName);
         patternToMine.populateConstraint(unionRelationSet);
+
     }
 
-    //For testsuite
+    public DcrModel getDcrModel(){
+
+        try {
+            return convert(streamMiner.getExtendedDFG());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    //For testsoftware
 
     public ExtendedDFG getExtendedDFG() {
-        return dataStorage.getExtendedDFG();
+        return streamMiner.getExtendedDFG();
+    }
+    public void saveCurrentWindowLog(String filePath) throws TransformerException {
+        this.streamMiner. saveLog(filePath);
+    }
+    public UnionRelationSet getUnionRelationSet(){
+        return unionRelationSet;
     }
 
 }

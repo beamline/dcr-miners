@@ -1,12 +1,12 @@
-package beamline.dcr.model;
+package beamline.dcr.model.streamminers;
 
-import beamline.dcr.model.dfg.ActivityDecoration;
-import beamline.dcr.model.dfg.ExtendedDFG;
-import beamline.dcr.model.dfg.RelationDecoration;
+import beamline.dcr.model.relations.dfg.ActivityDecoration;
+import beamline.dcr.model.relations.dfg.ExtendedDFG;
+import beamline.dcr.model.relations.dfg.RelationDecoration;
 
 import java.util.*;
 
-public class UnlimitedDataStorage implements DataStorage{
+public class UnlimitedStreamMiner implements StreamMiner {
     private Map<String, String> latestActivityInTrace = new HashMap<String, String>();
     private Map<String, Integer> indexInCase = new HashMap<String, Integer>();
     private Map<String, Set<String>> observedActivitiesInTrace = new HashMap<String, Set<String>>();
@@ -45,5 +45,10 @@ public class UnlimitedDataStorage implements DataStorage{
     @Override
     public ExtendedDFG getExtendedDFG() {
         return extendedDFG;
+    }
+
+    @Override
+    public void saveLog(String filePath) {
+        //Do nothing. Only for saving window
     }
 }

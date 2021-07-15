@@ -1,8 +1,8 @@
-package beamline.dcr.model;
+package beamline.dcr.model.streamminers;
 
-import beamline.dcr.model.dfg.ActivityDecoration;
-import beamline.dcr.model.dfg.ExtendedDFG;
-import beamline.dcr.model.dfg.RelationDecoration;
+import beamline.dcr.model.relations.dfg.ActivityDecoration;
+import beamline.dcr.model.relations.dfg.ExtendedDFG;
+import beamline.dcr.model.relations.dfg.RelationDecoration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -11,7 +11,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -19,35 +18,35 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.util.*;
 
-public class SlidingWindowDataStorage implements DataStorage {
+public class SlidingWindowStreamMiner implements StreamMiner {
     //based on number of elements in queue
-
     HashMap<String, List<String>> observedActivitiesInTrace = new HashMap<>();
     private Map<String, String> latestActivityInCase = new HashMap<String, String>();
     private ExtendedDFG extendedDFG = new ExtendedDFG();
 
     private final int maxSize;
 
-    public SlidingWindowDataStorage(int maxSize) {
+    public SlidingWindowStreamMiner(int maxSize) {
         this.maxSize = maxSize;
     }
     @Override
     public void observeEvent(String traceId, String activityName){
-        boolean firstOccurrance = true;
+        boolean firstOccurrence = true;
         if (observedActivitiesInTrace.containsKey(traceId)) {
-            if(observedActivitiesInTrace.get(traceId).size()>=maxSize) removeActivity(traceId,activityName);
+            if(observedActivitiesInTrace.get(traceId).size()>=maxSize){
+                removeFirstActivity(traceId);
+            }
 
             if (observedActivitiesInTrace.get(traceId).contains(activityName)) {
-                firstOccurrance = false;
-            } else {
-                observedActivitiesInTrace.get(traceId).add(activityName);
+                firstOccurrence = false;
             }
         } else {
-            observedActivitiesInTrace.put(traceId, new ArrayList<>(Arrays.asList(activityName)));
+            observedActivitiesInTrace.put(traceId, new ArrayList<>());
         }
+        observedActivitiesInTrace.get(traceId).add(activityName);
         int currentIndex = observedActivitiesInTrace.get(traceId).size()-1;
         ActivityDecoration activityDecoration = extendedDFG.addActivityIfNeeded(activityName);
-        activityDecoration.addNewObservation(currentIndex, firstOccurrance);
+        activityDecoration.addNewObservation(currentIndex, firstOccurrence);
 
         if (latestActivityInCase.containsKey(traceId)) {
             String previousActivity = latestActivityInCase.get(traceId);
@@ -63,8 +62,11 @@ public class SlidingWindowDataStorage implements DataStorage {
         return extendedDFG;
     }
 
-    private void removeActivity(String traceId, String activityName){
+    private void removeFirstActivity(String traceId){
         List<String> activitiesInTrace = observedActivitiesInTrace.get(traceId);
+
+
+        String activityName = activitiesInTrace.get(0);
 
         //Remove index 0 decoration
         ActivityDecoration activityDecoration = extendedDFG.getActivityDecoration(activityName);
@@ -86,10 +88,10 @@ public class SlidingWindowDataStorage implements DataStorage {
             activityDecoration.decrementDecorations(firstOccurrenceOfActivity);
 
         }
-
     }
-
-    public void convertWindowToLog(String fileName) throws TransformerException {
+    @Override
+    public void saveLog(String fileName) {
+        
         DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 
         DocumentBuilder documentBuilder = null;
@@ -111,13 +113,22 @@ public class SlidingWindowDataStorage implements DataStorage {
                 Element event = document.createElement("event");
                 event.setAttribute("id",activityName);
                 trace.appendChild(event);
+
             }
             root.appendChild(trace);
         });
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        DOMSource domSource = new DOMSource(document);
-        StreamResult streamResult = new StreamResult(new File(fileName + ".xml"));
-        transformer.transform(domSource, streamResult);
+
+
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource domSource = new DOMSource(document);
+            StreamResult streamResult = new StreamResult(new File(fileName + ".xml"));
+            transformer.transform(domSource, streamResult);
+        } catch (TransformerException e) {
+            System.out.println(e);
+            e.printStackTrace();
+        }
+
     }
 }

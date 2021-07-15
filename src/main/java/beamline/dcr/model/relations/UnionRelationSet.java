@@ -1,7 +1,7 @@
-package beamline.dcr.model;
+package beamline.dcr.model.relations;
 
-import beamline.dcr.model.dfg.ActivityDecoration;
-import beamline.dcr.model.dfg.ExtendedDFG;
+import beamline.dcr.model.relations.dfg.ActivityDecoration;
+import beamline.dcr.model.relations.dfg.ExtendedDFG;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -39,14 +39,6 @@ public class UnionRelationSet {
         DcrRelations.remove(relation);
     }
 
-    public void replaceDCRRelation(Triple<String,String, DcrModel.RELATION> newRelation,Triple<String,String, DcrModel.RELATION> oldRelation){
-        removeDCRRelation(oldRelation);
-        addDcrRelation(newRelation);
-    }
-
-    public boolean DCRRelationsContains(Triple<String,String, DcrModel.RELATION> relation){
-        return DcrRelations.contains(relation);
-    }
 
     public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithPattern(DcrModel.RELATION pattern){
         return DcrRelations.stream()
@@ -54,12 +46,12 @@ public class UnionRelationSet {
                 .collect(Collectors.toSet());
     }
 
-    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationwithTarget(String target, DcrModel.RELATION relation){
+    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithTarget(String target, DcrModel.RELATION relation){
         return DcrRelations.stream()
                 .filter(entry -> entry.getMiddle().equals(target) && entry.getRight() == relation)
                 .collect(Collectors.toSet());
     }
-    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationwithSource(String source, DcrModel.RELATION relation){
+    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithSource(String source, DcrModel.RELATION relation){
         return DcrRelations.stream()
                 .filter(entry -> entry.getLeft().equals(source) && entry.getRight() == relation)
                 .collect(Collectors.toSet());

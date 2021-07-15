@@ -1,4 +1,4 @@
-package beamline.dcr.testsuite;
+package beamline.dcr.testsoftware;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.deckfour.xes.in.XesXmlParser;
@@ -6,16 +6,16 @@ import org.deckfour.xes.model.*;
 import java.io.File;
 import java.util.*;
 
-public class ConformanceTesting {
+public class ConformanceChecking {
 
-    private final String eventLogPath;
+    private String eventLogPath;
     private Double fitness;
     private Double precision;
     private Set<String> illegalTraces;
 
     TransitionSystem transitionSystem;
 
-    public ConformanceTesting(String eventLogPath, TransitionSystem transitionSystem) {
+    public ConformanceChecking(String eventLogPath, TransitionSystem transitionSystem) {
         this.illegalTraces = new HashSet<>();
         this.eventLogPath = eventLogPath;
         this.transitionSystem = transitionSystem;
@@ -41,6 +41,8 @@ public class ConformanceTesting {
                 boolean traceIslegal = true;
                 for (XEvent event : trace ){
                     String activity = event.getAttributes().get("concept:name").toString();
+                    //String activity = event.getAttributes().get("EventName").toString(); //Dreyer's fond
+
                     //Check if event can be executed
                     if(!transitionSystem.executeEvent(activity)){
                         traceIslegal=false;
@@ -55,7 +57,6 @@ public class ConformanceTesting {
                 }
 
                 /*if (transitionSystem.anyPendingEvents()){
-
                     traceIslegal = false;
                 }*/
 
@@ -87,7 +88,24 @@ public class ConformanceTesting {
         return precision;
     }
 
-    public Set<String> getIllegalTraces(){
+
+
+    public Set<String> getIllegalTracesFromIllegalLog() throws Exception {
+        int at = eventLogPath.indexOf('.');
+
+        this.eventLogPath = eventLogPath.substring(0, at) + "_illegal" + eventLogPath.substring(at);
+        checkConformance();
         return illegalTraces;
+    }
+    public String getIllegalTracesString() throws Exception {
+        int at = eventLogPath.indexOf('.');
+
+        this.eventLogPath = eventLogPath.substring(0, at) + "_illegal" + eventLogPath.substring(at);
+        checkConformance();
+        StringBuilder illegalTracesString = new StringBuilder();
+        for(String illegal : illegalTraces){
+            illegalTracesString.append(illegal);
+        }
+        return illegalTracesString.toString();
     }
 }

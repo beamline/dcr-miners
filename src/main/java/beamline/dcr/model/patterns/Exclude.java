@@ -1,11 +1,11 @@
 package beamline.dcr.model.patterns;
 
 import beamline.dcr.annotations.ExposedDcrPattern;
-import beamline.dcr.model.UnionRelationSet;
+import beamline.dcr.model.relations.UnionRelationSet;
 
 @ExposedDcrPattern(
         name = "Exclude",
-        dependencies = {"Condition","Response"}
+        dependencies = {"Sequence"}
 )
 public class Exclude  implements RelationPattern{
     @Override

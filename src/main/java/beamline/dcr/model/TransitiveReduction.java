@@ -1,5 +1,7 @@
 package beamline.dcr.model;
 
+import beamline.dcr.model.relations.DcrModel;
+import beamline.dcr.model.relations.UnionRelationSet;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.*;
@@ -53,21 +55,20 @@ public class TransitiveReduction {
     private void transitiveReduction(BitSet[] pathMatrix){
         // transitively reduce
         for (int j = 0; j < pathMatrix.length; j++) {
-            for (int i = 0; i < pathMatrix.length; i++) {
-                if (pathMatrix[i].get(j)) {
+            for (BitSet matrix : pathMatrix) {
+                if (matrix.get(j)) {
                     for (int k = 0; k < pathMatrix.length; k++) {
                         if (pathMatrix[j].get(k)) {
-                            pathMatrix[i].set(k, false);
+                            matrix.set(k, false);
                         }
                     }
                 }
             }
         }
     }
-
     public void reduce(UnionRelationSet unionRelationSet, DcrModel.RELATION patternToReduce){
         setUp(unionRelationSet,patternToReduce);
-        //intialize matrix with edges
+        //initialize matrix with edges
         for (Triple<String, String, DcrModel.RELATION> relationPattern : allRelationsWithPattern) {
 
             String src = relationPattern.getLeft();
@@ -96,7 +97,6 @@ public class TransitiveReduction {
             }
         }
     }
-
     private void printBit(BitSet[] b,String name){
         System.out.println(name);
 
