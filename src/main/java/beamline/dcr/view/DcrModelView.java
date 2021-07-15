@@ -5,8 +5,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Triple;
 
-import beamline.dcr.model.DcrModel;
-import beamline.dcr.model.DcrModel.RELATION;
+import beamline.dcr.model.relations.DcrModel;
+import beamline.dcr.model.relations.DcrModel.RELATION;
 import beamline.graphviz.Dot;
 import beamline.graphviz.DotEdge;
 import beamline.graphviz.DotNode;
