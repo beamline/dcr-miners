@@ -35,7 +35,6 @@ Output is .csv file in: .../testsoftware/evaluations/*logNumber*/modelmodel/resu
   3.2 Relations Threshold (if not wanted put 0)\
   3.3 Compare to discover (put true for yes  false for reference model)
   3.3 Create plots (true for yes false for no). Will save in .../testsoftware/evaluations/*logNumber*
-
 Output is .csv file with performacne from all seetting combinations in .../testsoftware/evaluations/*logNumber/performance_test_*date*.csv
 
 
@@ -71,7 +70,8 @@ Example run with: log: 101, relation threshold: 0 , constraints: condition and r
 ```
 
 For 3. FrameworkSettingTester
-Example run with: log: 101, relation threshold: 0 , compare to: reference model,create plots: no.
+
+Example run with: log: 101, relation threshold: 0 , compare to: reference model, create plots: no.
 ```bash
  mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.FrameworkSettingTester" -Dexec.arguments="101,0, false, false"
 ```
