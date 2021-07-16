@@ -34,7 +34,7 @@ Output is .csv file in: .../testsoftware/evaluations/*logNumber*/modelmodel/resu
   3.1 Event log number (default in repository is 3, 25, 101, D)\
   3.2 Relations Threshold (if not wanted put 0)\
   3.3 Compare to discover (put true for yes  false for reference model)
-  3.3 Create plots (true for yes false for no). Will save in .../testsoftware/evaluations/*logNumber*
+  3.3 Create plots (true for yes false for no). Will save in .../testsoftware/evaluations/*logNumber*\
 Output is .csv file with performacne from all seetting combinations in .../testsoftware/evaluations/*logNumber/performance_test_*date*.csv
 
 
