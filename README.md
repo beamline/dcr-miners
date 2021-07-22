@@ -73,5 +73,5 @@ For 3. FrameworkSettingTester
 
 Example run with: log: 101, relation threshold: 0 , compare to: reference model, create plots: no.
 ```bash
- mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.FrameworkSettingTester" -Dexec.arguments="101,0, false, false"
+ mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.FrameworkSettingTester" -Dexec.arguments="101,0,false,false"
 ```
