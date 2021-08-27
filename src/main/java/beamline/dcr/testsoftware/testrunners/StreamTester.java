@@ -91,8 +91,7 @@ public class StreamTester {
 
 
             sc.configure(coll);
-            sc.setStream(new Stream("test", "localhost", ""));
-            sc.start();
+
 
 
             String streamPath = currentPath + "/eventlogs/eventlog_graph"+eventlogNumber+ ".xes";
@@ -175,9 +174,6 @@ public class StreamTester {
                 currentIteration++;
                 System.out.println(currentObservedEvents + " of " + totalObservations);
             }
-
-
-            sc.stop();
         }
         }
         String outputDirectoryPath =  currentPath + "/evaluations/"+ eventlogNumber +"/modelmodel";

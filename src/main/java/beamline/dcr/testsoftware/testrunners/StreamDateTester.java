@@ -110,8 +110,6 @@ public class StreamDateTester {
 
 
                 sc.configure(coll);
-                sc.setStream(new Stream("test", "localhost", ""));
-                sc.start();
 
                 // simulate stream
                 int currentObservedEvents = 0;
@@ -128,20 +126,15 @@ public class StreamDateTester {
                                     "maxtraces"+maxTraces +"_tracesize"+traceSize + "_obs" + currentObservedEvents);
                         }
 
-                        ExtendedDFG extendedDFG = sc.getExtendedDFG();
                         DcrModel dcrModel = sc.getDcrModel();
                         //comparison
-                        UnionRelationSet unionRelationSet = sc.getUnionRelationSet();
-                        TransitionSystem transitionSystem = new TransitionSystem(unionRelationSet);
-                        ConformanceChecking conformanceChecking = new ConformanceChecking(streamPath,transitionSystem);
-                        conformanceChecking.checkConformance();
+
                         ModelComparison modelComparison = new ModelComparison(dcrModel);
                         modelComparison.loadComparativeModel(compareModel);
                         double jaccard = modelComparison.getJaccardSimilarity();
 
                         String row = jaccard +"," + modelComparison.getPrecision() +
-                                "," + modelComparison.getRecall() + "," + conformanceChecking.getFitness() + "," +
-                                conformanceChecking.getPrecision() + "," + conformanceChecking.getIllegalTracesString();
+                                "," + modelComparison.getRecall();
 
                         csvResults.append(maxTraces + ",").append(traceSize).append(",").append(currentObservedEvents).append(",")
                                 .append(event.getRight() +",").append(sc.getNumberEventsInWindow()+",")
@@ -153,9 +146,6 @@ public class StreamDateTester {
                     if(currentObservedEvents%100==0) System.out.println(currentObservedEvents + " of " + totalObservations);
 
                 }
-
-
-                sc.stop();
             }
         }
         String outputDirectoryPath =  currentPath + "/evaluations/"+ eventlogNumber +"/modelmodel";
@@ -170,7 +160,7 @@ public class StreamDateTester {
         myObj.createNewFile();
         try {
             FileWriter myWriter = new FileWriter(filePath,true);
-            String columnTitles ="maxTraces,traceSize,observed,date,memory,model_jaccard,model_precision,model_recall,log_fitness,log_precision,illegal_traces\n";
+            String columnTitles ="maxTraces,traceSize,observed,date,memory,model_jaccard,model_precision,model_recall\n";
 
             myWriter.write(columnTitles+csvResults);
             myWriter.close();

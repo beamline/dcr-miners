@@ -24,7 +24,6 @@ public class DriftCaptureRun {
         int traceSize = Integer.parseInt(args[2]);
         int maxTraces = Integer.parseInt(args[3]);
         boolean compareWithOnlineDisCoveR = Boolean.parseBoolean(args[4]);
-        boolean saveMemoryUsageFile = Boolean.parseBoolean(args[5]);
         String streamMiningAlgo = "Sliding Window";
 
         String[] transitiveReductionList ={};
@@ -70,11 +69,11 @@ public class DriftCaptureRun {
                 String streamNameExt = listOfEventStreams[i].getName();
                 String streamName = streamNameExt.replace(".csv","");
                 String[] splitString = streamName.split("_");
-                String splitType = splitString[splitString.length-1];
 
-                StringBuilder eventFileString = new StringBuilder();
 
-                StringBuilder xmlString = new StringBuilder("observedEvents,jaccardMined,jaccardDiscover,model,ModelConstraints,compModelConstraints,compModelActivity\n");
+
+
+                StringBuilder xmlString = new StringBuilder("observedEvents,memory(events used),max traces, max trace length,jaccardMined,jaccardDiscover,model,ModelConstraints,compModelConstraints,compModelActivity\n");
                 ModelComparison comparison = new ModelComparison(sc.getDcrModel());
 
                 BufferedReader csvReader = new BufferedReader(new FileReader(pathToStreamlogs + streamNameExt));
@@ -115,21 +114,15 @@ public class DriftCaptureRun {
 
                         }
                         xmlString.append(currentObservedEvents +",")
+                                .append(sc.getNumberEventsInWindow()+",")
+                                .append(maxTraces+",")
+                                .append(traceSize+",")
                                 .append(jaccardMined + ",")
                                 .append(jaccardDiscover + ",")
                                 .append(data[0] + ",")
                                 .append(sc.getDcrModel().getRelations().size() + ",")
                                 .append(onlineDisCoveR.getRelations().size() + ",")
                                 .append(adaptedModel.getRelations().size() + "\n");
-
-                        if(saveMemoryUsageFile){
-                            eventFileString
-                                    .append(currentObservedEvents +",")
-                                    .append(sc.getNumberEventsInWindow()+",")
-                                    .append(maxTraces + ",")
-                                    .append(traceSize +",");
-                        }
-
 
 
                     }

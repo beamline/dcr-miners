@@ -32,7 +32,7 @@ public class CreateOnlineLogs {
 
         String rootPath = System.getProperty("user.dir");
         String currentPath = rootPath + "/src/main/java/beamline/dcr/testsoftware";
-        String pathToStreamlogs = currentPath + "/eventlogs/streamlogs/modified";
+        String pathToStreamlogs = currentPath + "/eventlogs/streamlogs/modified/";
 
 
 
@@ -68,11 +68,12 @@ public class CreateOnlineLogs {
                 String streamNameExt = listOfEventStreams[i].getName();
                 String streamName = streamNameExt.replace(".csv","");
 
-                BufferedReader csvReader = new BufferedReader(new FileReader(pathToStreamlogs + streamNameExt));
+                BufferedReader csvReader = new BufferedReader(new FileReader(pathToStreamlogs  + streamNameExt));
 
                 String row;
                 int currentObservedEvents = 0;
                 while ((row = csvReader.readLine()) != null) {
+
                     if (currentObservedEvents==0){
                         currentObservedEvents ++;
                         continue;
@@ -83,13 +84,16 @@ public class CreateOnlineLogs {
 
                     if (currentObservedEvents % observationsBeforeEvaluation == 0) {
                         //Save logs for online comparison
+                        System.out.println(currentObservedEvents);
                         sc.saveCurrentWindowLog("/Users/lassestarklit/Downloads/DisCoveR20210809/eventlogs/online/modified/"+currentObservedEvents+"_mt"+maxTraces+"_ws"+traceSize+"_"+streamName);
+
                     }
+
                     currentObservedEvents++;
                 }
 
                 csvReader.close();
-
+                System.out.println(streamName + " processed");
                 sc.stop();
                 }
         }

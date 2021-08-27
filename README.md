@@ -70,11 +70,12 @@ Example run with: log: 101, relation threshold: 0 , patterns to mine: condition 
 ```bash
  mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.StreamTester" -Dexec.arguments="101,0,Condition Response, ,false,false,false,5 10,5 10,5,Condition Response"
 ```
+
 For 3. StreamDateTester
 Uses date in event log to sort event stream
 Example run with: log: 101, relation threshold: 0 , patterns to mine: condition and response, transitive reduction: none, save xml: no, compare to: reference model, save logs: no,trace window sizes: 10, 15, and 20, max traces window: 5, 10 and 15,  evaluate after: 5 event observations, constraints in model: condition and response.
 ```bash
- mvn -q clean compile exec:java -Dexec.mainass="beamline.dcr.testsoftware.testrunners.StreamDateTester" -Dexec.arguments="D,0,Condition Response, ,false,false,false,10 15 20 30,5 10 15,5,Condition Response"
+ mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.StreamDateTester" -Dexec.arguments="D,0,Condition Response, ,false,false,false,10 15 20 30,5 10 15,5,Condition Response"
 ```
 
 
