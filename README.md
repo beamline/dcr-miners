@@ -29,8 +29,10 @@ Currently 3 test runs are implemented to evaluate the miner:
   2.8 List of windowsizes to compare. For multiple insert space between\
   2.9 Evaluation after x observations\
 Output is .csv file in: .../testsoftware/evaluations/*logNumber*/modelmodel/results_*windowsize*.csv
+   
+3. Like 2, but sorts projects the stream from eventlog based on timestamps
 
-3. A framework setting test discovering models on every test with the following arguments:\
+4. A framework setting test discovering models on every test with the following arguments:\
   3.1 Event log number (default in repository is 3, 25, 101, D)\
   3.2 Relations Threshold (if not wanted put 0)\
   3.3 Compare to discover (put true for yes  false for reference model)
