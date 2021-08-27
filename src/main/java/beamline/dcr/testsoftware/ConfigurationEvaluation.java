@@ -163,6 +163,7 @@ public class ConfigurationEvaluation {
 							checkedCombinations.add(patternCombination.toString());
 							dcrModel = new DcrModel();
 							dcrModel.addRelations(unionRelationSet.getDcrRelations());
+							dcrModel.addActivities(extendedDFG.getActivities());
 
                             Pair<List<Double>,String> imperativeEvaluation = getImperativeEvaluation(dcrModel, unionRelationSet,
                                     compareModelPath, currentPath + eventLog);
@@ -193,8 +194,6 @@ public class ConfigurationEvaluation {
             System.out.println(metrics.get(i) + " - Combination:" +performanceList.get(i).getLeft() +
                     " - value:" + performanceList.get(i).getRight());
         }
-
-
     }
     private Pair<List<Double>,String> getImperativeEvaluation
             (DcrModel dcrModel, UnionRelationSet unionRelationSet,
@@ -227,13 +226,16 @@ public class ConfigurationEvaluation {
         File myObj = new File(outputFile);
 
         myObj.createNewFile();
-        String title = "constraints,model_jaccard,model_precision,model_recall,log_fitness,log_precision,numConstraints,f1,illegal_traces,\n";
+        String title = "constraints,model_jaccard,model_precision,model_recall,log_fitness,log_precision,numConstraints,f1,illegal_traces\n";
         writeMetricsToFile(outputFile,title);
 
         writeMetricsToFile(outputFile,csvText.toString());
         if (createPlots){
             PlotResults plotResults = new PlotResults(outputFile);
-            plotResults.saveScatterPlot(outputDirectoryPath);
+            String plotTitle = "Performance";
+            String[] metricsToPlot = {"model_jaccard","log_fitness"};
+            plotResults.createLinePlot(outputDirectoryPath,plotTitle,metricsToPlot);
+
         }
 
 

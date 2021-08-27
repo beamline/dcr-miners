@@ -35,14 +35,14 @@ public class UnionRelationSet {
         DcrRelations.add(relation);
     }
 
-    public void removeDCRRelation(Triple<String,String, DcrModel.RELATION> relation){
+    public void removeDcrRelation(Triple<String,String, DcrModel.RELATION> relation){
         DcrRelations.remove(relation);
     }
 
 
-    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithPattern(DcrModel.RELATION pattern){
+    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithConstraint(DcrModel.RELATION constraint){
         return DcrRelations.stream()
-                .filter(entry -> entry.getRight() == pattern)
+                .filter(entry -> entry.getRight() == constraint)
                 .collect(Collectors.toSet());
     }
 

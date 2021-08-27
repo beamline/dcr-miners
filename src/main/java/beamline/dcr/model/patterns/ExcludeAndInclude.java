@@ -97,7 +97,7 @@ public class ExcludeAndInclude implements RelationPattern {
 
     private void precedence(){
         Set<Triple<String, String, DcrModel.RELATION>> dcrSequences =
-                unionRelationSet.getDcrRelationWithPattern(DcrModel.RELATION.SEQUENCE);
+                unionRelationSet.getDcrRelationWithConstraint(DcrModel.RELATION.SEQUENCE);
 
         for (Triple<String, String, DcrModel.RELATION> sequence : dcrSequences) {
             String source = sequence.getLeft();
@@ -182,7 +182,7 @@ public class ExcludeAndInclude implements RelationPattern {
 
         BitSet[] adjacencyMatrixExcludes = computeAdjacencyMatrix(excludeSet);
         Set<Triple<String, String, DcrModel.RELATION>> dcrSequences =
-                unionRelationSet.getDcrRelationWithPattern(DcrModel.RELATION.SEQUENCE);
+                unionRelationSet.getDcrRelationWithConstraint(DcrModel.RELATION.SEQUENCE);
 
         for (Triple<String, String, DcrModel.RELATION> sequence : dcrSequences) {
             int sourceIndex = activityList.indexOf(sequence.getLeft());

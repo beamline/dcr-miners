@@ -38,7 +38,9 @@ import javax.xml.transform.TransformerException;
                 type = MinerParameter.Type.CHOICE, defaultValue = "Condition;Response;Exclude;Include"),
                 @ExposedMinerParameter(name = "Stream Miner",
                         type = MinerParameter.Type.CHOICE, defaultValue = "Sliding Window;Infinite Memory"),
-                @ExposedMinerParameter(name = "Max Size Window",
+                @ExposedMinerParameter(name = "Trace Window Size",
+                        type = MinerParameter.Type.INTEGER, defaultValue = "10"),
+                @ExposedMinerParameter(name = "Max traces",
                         type = MinerParameter.Type.INTEGER, defaultValue = "20"),
                 @ExposedMinerParameter(name = "Transitive Reduction",
                         type = MinerParameter.Type.CHOICE, defaultValue = "Condition;Response"),
@@ -54,6 +56,7 @@ public class DFGBasedMiner extends AbstractMiner {
 
     private Reflections reflections;
     private Set<Class<?>> dcrPatternClasses;
+
     private StreamMiner streamMiner;
     private UnionRelationSet unionRelationSet;
     private Integer relationsThreshold;
@@ -61,6 +64,7 @@ public class DFGBasedMiner extends AbstractMiner {
 
 
     private String[] dcrPatternList;
+    private String[] dcrConstraintList;
     private Set<String> postorderTraversal;
 
     public DFGBasedMiner(){
@@ -70,7 +74,8 @@ public class DFGBasedMiner extends AbstractMiner {
     @Override
     public void configure(Collection<MinerParameterValue> collection) {
         String streamMiningType = "";
-        Integer windowMax = null;
+        Integer traceMax = null;
+        Integer maxTraces = null;
         for(MinerParameterValue v : collection) {
             switch (v.getName()) {
                 case "DCR Patterns":
@@ -79,8 +84,11 @@ public class DFGBasedMiner extends AbstractMiner {
                 case "Stream Miner":
                     streamMiningType = (String) v.getValue();
                     break;
-                case "Max Size Window":
-                    windowMax = (Integer) v.getValue();
+                case "Trace Window Size":
+                    traceMax = (Integer) v.getValue();
+                    break;
+                case "Max Traces":
+                    maxTraces = (Integer) v.getValue();
                     break;
                 case "Transitive Reduction":
                     this.transReductionList = (String[]) v.getValue();
@@ -88,13 +96,16 @@ public class DFGBasedMiner extends AbstractMiner {
                 case "Relations Threshold":
                     this.relationsThreshold = (Integer) v.getValue();
                     break;
+                case "DCR Constraints":
+                    this.dcrConstraintList = (String[]) v.getValue();
+                    break;
             }
 
         }
         switch (streamMiningType){
 
             case "Sliding Window":
-                this.streamMiner = new SlidingWindowStreamMiner(windowMax);
+                this.streamMiner = new SlidingWindowStreamMiner(traceMax,maxTraces);
                 break;
             default:
                 this.streamMiner = new UnlimitedStreamMiner();
@@ -120,7 +131,7 @@ public class DFGBasedMiner extends AbstractMiner {
             //miner parameter from local testrun to save XML
             for(MinerParameterValue v : collection) {
                 if (v.getName().equals("filename")) {
-                    new DcrModelXML(dcrModelConverted,extendedDFG).toFile(v.getValue().toString());
+                    new DcrModelXML(dcrModelConverted).toFile(v.getValue().toString());
                 }
             }
         }
@@ -147,10 +158,12 @@ public class DFGBasedMiner extends AbstractMiner {
             RELATION enumPattern = RELATION.valueOf(transReduce.toUpperCase());
             transitiveReduction.reduce(unionRelationSet,enumPattern);
         }
+
+        model.addActivities(dfg.getActivities());
         //project user selected patterns to DCR Model
-        for (String dcrPattern : dcrPatternList){
-            RELATION enumPattern = RELATION.valueOf(dcrPattern.toUpperCase());
-            Set<Triple<String, String, RELATION>> minedConstraints = unionRelationSet.getDcrRelationWithPattern(enumPattern);
+        for (String dcrConstraint : dcrConstraintList){
+            RELATION enumConstraint = RELATION.valueOf(dcrConstraint.toUpperCase());
+            Set<Triple<String, String, RELATION>> minedConstraints = unionRelationSet.getDcrRelationWithConstraint(enumConstraint);
             model.addRelations(minedConstraints);
         }
         return model;
@@ -241,7 +254,10 @@ public class DFGBasedMiner extends AbstractMiner {
         return streamMiner.getExtendedDFG();
     }
     public void saveCurrentWindowLog(String filePath) throws TransformerException {
-        this.streamMiner. saveLog(filePath);
+        this.streamMiner.saveLog(filePath);
+    }
+    public int getNumberEventsInWindow(){
+        return this.streamMiner.getNumberEventsSaved();
     }
     public UnionRelationSet getUnionRelationSet(){
         return unionRelationSet;

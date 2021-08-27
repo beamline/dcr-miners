@@ -10,5 +10,6 @@ public interface StreamMiner {
     public ExtendedDFG getExtendedDFG();
 
     public void saveLog(String filePath);
+    public int getNumberEventsSaved();
 
 }

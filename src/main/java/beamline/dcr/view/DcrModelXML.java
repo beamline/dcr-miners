@@ -21,12 +21,11 @@ public class DcrModelXML {
 
     private DcrModel model;
     private Document document;
-    private ExtendedDFG extendedDFG;
 
-    public DcrModelXML(DcrModel model, ExtendedDFG extendedDFG) {
+    public DcrModelXML(DcrModel model) {
 
         this.model = model;
-        this.extendedDFG = extendedDFG;
+
         DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 
         DocumentBuilder documentBuilder = null;
@@ -77,7 +76,6 @@ public class DcrModelXML {
     }
     private void insertResourcesAndMarkings(Element specification, Element runtime){
 
-
         //Events
         Element resources = document.createElement("resources");
         Element events = document.createElement("events");
@@ -89,7 +87,7 @@ public class DcrModelXML {
         Element included = document.createElement("included");
         marking.appendChild(included);
         marking.appendChild(document.createElement("pendingResponses"));
-        for (String event : extendedDFG.getActivities()){
+        for (String event : model.getActivities()){
             Element eventElement = document.createElement("event");
             Element customEvent = document.createElement("custom");
             Element visualization = document.createElement("visualization");

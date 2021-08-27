@@ -56,22 +56,30 @@ mvn package
 
 For 1. BasicTest. 
 
-Example run with: log: 101, relation threshold: 0 , constraints: condition and response, transitive reduction: none, save xml: no, compare to: reference model.
+Example run with: log: 101, relation threshold: 0 , constraints: condition and response, transitive reduction: none, save xml: no, compare to: reference model, constraints in model: condition and response.
 ```bash
-mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.BasicTester" -Dexec.arguments="101,0,Condition Response, ,false,false"
+mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.BasicTester" -Dexec.arguments="101,0,Condition Response, ,false,false,Condition Response"
 
 ```
 
 For 2. StreamTester
 
-Example run with: log: 101, relation threshold: 0 , constraints: condition and response, transitive reduction: none, save xml: no, compare to: reference model, save logs: no, test window sizes: 5 and 10, evaluate after: 5 event observsations.
+Example run with: log: 101, relation threshold: 0 , patterns to mine: condition and response, transitive reduction: none, save xml: no, compare to: reference model, save logs: no,trace window sizes: 5 and 10, max traces window: 5 and 10,  evaluate after: 5 event observations, constraints in model: condition and response.
 ```bash
- mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.StreamTester" -Dexec.arguments="101,0,Condition Response, ,false,false,false,5 10,5,"
+ mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.StreamTester" -Dexec.arguments="101,0,Condition Response, ,false,false,false,5 10,5 10,5,Condition Response"
+```
+For 3. StreamDateTester
+Uses date in event log to sort event stream
+Example run with: log: 101, relation threshold: 0 , patterns to mine: condition and response, transitive reduction: none, save xml: no, compare to: reference model, save logs: no,trace window sizes: 10, 15, and 20, max traces window: 5, 10 and 15,  evaluate after: 5 event observations, constraints in model: condition and response.
+```bash
+ mvn -q clean compile exec:java -Dexec.mainass="beamline.dcr.testsoftware.testrunners.StreamDateTester" -Dexec.arguments="D,0,Condition Response, ,false,false,false,10 15 20 30,5 10 15,5,Condition Response"
 ```
 
-For 3. FrameworkSettingTester
+
+For 4. FrameworkSettingTester
 
 Example run with: log: 101, relation threshold: 0 , compare to: reference model, create plots: no.
 ```bash
  mvn -q clean compile exec:java -Dexec.mainClass="beamline.dcr.testsoftware.testrunners.FrameworkSettingTester" -Dexec.arguments="101,0,false,false"
 ```
+

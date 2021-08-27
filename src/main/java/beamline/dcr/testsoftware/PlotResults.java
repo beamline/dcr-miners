@@ -7,15 +7,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.SymbolAxis;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
-
-import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class PlotResults {
     private final List<String> constraintList;
@@ -25,26 +24,32 @@ public class PlotResults {
 
     public PlotResults(String resultFilePath) {
 
-
-
         this.constraintList = new ArrayList<>();
         this.performanceLists = new ArrayList<>();
-        this.performanceLists.add(Pair.of(new ArrayList<>(),"Jaccard"));
-        this.performanceLists.add(Pair.of(new ArrayList<>(),"Model Precision"));
-        this.performanceLists.add(Pair.of( new ArrayList<>(),"Model Recall"));
-        this.performanceLists.add(Pair.of(new ArrayList<>(),"Log fitness"));
-        this.performanceLists.add(Pair.of( new ArrayList<>(),"Log Precision"));
 
-        try(
-                BufferedReader br = new BufferedReader(new FileReader(resultFilePath));
-                CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(br)
+        try{
 
-        ) {
+            BufferedReader br = new BufferedReader(new FileReader(resultFilePath));
+
+            CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(br);
+
+
+            for (Map.Entry<String, Integer> entry : parser.getHeaderMap().entrySet())
+                if (entry.getKey().equals("illegal_traces"))
+                    continue;
+                else
+                    this.performanceLists.add(Pair.of(new ArrayList<>(),entry.getKey()));
+
+
+
             for(CSVRecord record : parser) {
-                this.constraintList.add(record.get(0));
-                for(int i = 0; i < performanceLists.size(); i++){
-                    List<Double> performanceMetricList = performanceLists.get(i).getLeft();
 
+                this.constraintList.add(record.get(0));
+
+
+                for(int i = 0; i < performanceLists.size()-1; i++){
+                    //-1 to ignore identified illegal traces
+                    List<Double> performanceMetricList = performanceLists.get(i).getLeft();
                     performanceMetricList.add(Double.valueOf(record.get(i+1)));
 
                 }
@@ -52,60 +57,37 @@ public class PlotResults {
         } catch (Exception e) {
             System.out.println(e);
         }
-
     }
 
-    public void saveScatterPlot(String filePath) throws IOException {
-        for(int i = 0; i < performanceLists.size(); i++){
-            List<Double> performanceMetricList = performanceLists.get(i).getLeft();
-            String title = performanceLists.get(i).getRight();
-            JFreeChart scatterPlot = createPlot(performanceMetricList,title);
-            ChartUtils.saveChartAsPNG(new File(filePath+"/"+title+".png"), scatterPlot, 1200, 900);
 
-        }
+    public void createLinePlot(String filePath, String title, String[] metrics) throws IOException {
 
-
-
-
-    }
-    private JFreeChart createPlot(List<Double> performanceMetricList,String title){
-        XYDataset dataset = createDataset(performanceMetricList);
-
-        JFreeChart scatterPlot = ChartFactory.createScatterPlot(
-                title, // Chart title
-                "Constraints", // X-Axis Label
-                "Performance", // Y-Axis Label
-
-                dataset // Dataset for the Chart
+        DefaultCategoryDataset dataset = createCategoryDataset(metrics);
+        final JFreeChart chart = ChartFactory.createLineChart(
+                title,      // chart title
+                "Setting",                      // x axis label
+                "Performance",                      // y axis label
+                dataset,                  // data
+                PlotOrientation.VERTICAL,
+                true,                     // include legend
+                true,                     // tooltips
+                false                     // urls
         );
-
-        scatterPlot.getXYPlot().setDomainAxis(getSymbolAxis());
-
-        scatterPlot.getXYPlot().getDomainAxis().setVerticalTickLabels(true);
-
-        return scatterPlot;
-
+        ChartUtils.saveChartAsPNG(new File(filePath+"/"+ Arrays.toString(metrics) + "_" +  java.time.LocalDate.now() +".png"), chart, 1200, 900);
+        System.out.println("Plot saved");
     }
-    private XYDataset createDataset(List<Double> listToPlot) {
 
-        final XYSeries dataSeries = new XYSeries( "" );
-        for (int i = 0; i<constraintList.size(); i++){
-            dataSeries.add( i , listToPlot.get(i));
+    private DefaultCategoryDataset createCategoryDataset(String[] metrics) {
+        DefaultCategoryDataset dataSeries = new DefaultCategoryDataset();
+
+        for (Pair<List<Double>,String> listToPlot : performanceLists){
+            if( Arrays.asList(metrics).contains(listToPlot.getRight())){
+                for (int i = 0; i<constraintList.size(); i++) {
+                    dataSeries.addValue(listToPlot.getLeft().get(i), listToPlot.getRight(), constraintList.get(i));
+                }
+            }
         }
-
-        final XYSeriesCollection dataset = new XYSeriesCollection( );
-        dataset.addSeries( dataSeries );
-
-        return dataset;
-    }
-    private SymbolAxis getSymbolAxis(){
-
-
-        SymbolAxis xAxis = new SymbolAxis("Series",
-                constraintList.toArray(new String[0]));
-        xAxis.setGridBandsVisible(false);
-
-        return xAxis;
+        return dataSeries;
     }
 
 

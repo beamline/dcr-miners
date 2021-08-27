@@ -13,20 +13,28 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class ModelComparison {
 
     private DcrModel originalDcrModel;
     private DcrModel comparativeDcrModel;
+    public ModelComparison() {
 
+    }
     public ModelComparison(DcrModel dcrModel) {
         this.originalDcrModel = dcrModel;
     }
     public ModelComparison(String dcrModelpath) throws IOException, SAXException, ParserConfigurationException {
-        this.originalDcrModel = loadModel(dcrModelpath);
+        this.originalDcrModel = new DcrModel();
+        this.originalDcrModel.loadModel(dcrModelpath);
     }
 
+    public void loadOriginalModel(DcrModel dcrModel) {
+        this.originalDcrModel = dcrModel;
+    }
     public double getPrecision(){
         double tp = getIntersectionSize();
         double fp = originalDcrModel.getRelations().size() - tp;
@@ -35,7 +43,7 @@ public class ModelComparison {
     }
 
     private int getIntersectionSize(){
-        Set<Triple<String,String, DcrModel.RELATION>> otherModel = comparativeDcrModel.getRelations();
+
         Set<Triple<String,String, DcrModel.RELATION>> minedRelations = originalDcrModel.getRelations();
 
         int intersection = 0;
@@ -44,6 +52,32 @@ public class ModelComparison {
         }
 
         return intersection;
+    }
+    private int getIntersectingActivitiesSize(){
+
+        Set<String> minedActivities = originalDcrModel.getActivities();
+
+        int intersection = 0;
+        for (String relation : minedActivities){
+            if (comparativeDcrModel.getActivities().contains(relation)) intersection++;
+        }
+
+        return intersection;
+    }
+    private int getConstraintIntersectionSize(DcrModel.RELATION constraint){
+
+        Set<Triple<String,String, DcrModel.RELATION>> minedRelations = originalDcrModel.getDcrRelationWithConstraint(constraint);
+
+        int intersection = 0;
+        for (Triple<String, String, DcrModel.RELATION> relation : minedRelations){
+            if (comparativeDcrModel.containsRelation(relation)) intersection++;
+        }
+
+        return intersection;
+    }
+    private double getConstraintUnionSize(DcrModel.RELATION constraint, Double intersection){
+        return originalDcrModel.getDcrRelationWithConstraint(constraint).size() +
+                comparativeDcrModel.getDcrRelationWithConstraint(constraint).size() - intersection;
     }
     public double getRecall(){
         double tp = getIntersectionSize();
@@ -59,67 +93,81 @@ public class ModelComparison {
         return 2*precision*recall/(recall+precision);
     }
     public double getJaccardSimilarity(){
+        Map<DcrModel.RELATION, Double> constraintWeight = new HashMap<>(){{
+            put(DcrModel.RELATION.CONDITION, 0.15);
+            put(DcrModel.RELATION.RESPONSE, 0.05);
+            put(DcrModel.RELATION.PRECONDITION, 0.0);
+            put(DcrModel.RELATION.MILESTONE, 0.0);
+            put(DcrModel.RELATION.INCLUDE, 0.0);
+            put(DcrModel.RELATION.EXCLUDE, 0.0);
+            put(DcrModel.RELATION.NORESPONSE, 0.0);
+            put(DcrModel.RELATION.SPAWN, 0.0);
+        }};
+        double activityWeight = 0.8;
 
-        double intersection = getIntersectionSize();
+        double intersection;
+        double union;
+        double jaccardTotal = 0;
 
-        double union = originalDcrModel.getRelations().size() + comparativeDcrModel.getRelations().size() - intersection;
+        for (Map.Entry<DcrModel.RELATION,Double> entry : constraintWeight.entrySet()){
+            intersection = getConstraintIntersectionSize(entry.getKey());
+            union = getConstraintUnionSize(entry.getKey(),intersection);
 
-        return intersection/union;
+            double w = entry.getValue();
+            double sim = w * intersection/union;
+            if(Double.isNaN(sim)) sim = w;
+
+            jaccardTotal += sim;
+        }
+        double activityIntersection= getIntersectingActivitiesSize();
+        double activityUnion = originalDcrModel.getActivities().size() + comparativeDcrModel.getActivities().size() - activityIntersection;
+
+        jaccardTotal += activityWeight * activityIntersection/activityUnion;
+
+
+        return jaccardTotal;
     }
 
-    public DcrModel loadModel(String xmlGraphPath) throws ParserConfigurationException, IOException, SAXException {
-         DcrModel dcrModel = new DcrModel();
-        DocumentBuilderFactory factory =
-                DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
+    public String getJaccardString() {
+        Map<DcrModel.RELATION, Double> constraintWeight = new HashMap<>() {{
+            put(DcrModel.RELATION.CONDITION, 0.1);
+            put(DcrModel.RELATION.RESPONSE, 0.1);
+            put(DcrModel.RELATION.PRECONDITION, 0.1);
+            put(DcrModel.RELATION.MILESTONE, 0.1);
+            put(DcrModel.RELATION.INCLUDE, 0.1);
+            put(DcrModel.RELATION.EXCLUDE, 0.1);
+            put(DcrModel.RELATION.NORESPONSE, 0.1);
+            put(DcrModel.RELATION.SPAWN, 0.1);
+        }};
 
-        Document doc = builder.parse(new File(xmlGraphPath));
+        double intersection;
+        double union;
+        StringBuilder jaccardString = new StringBuilder();
+        for (Map.Entry<DcrModel.RELATION, Double> entry : constraintWeight.entrySet()) {
+            intersection = getConstraintIntersectionSize(entry.getKey());
+            union = getConstraintUnionSize(entry.getKey(), intersection);
 
-        //Set activity list
-        NodeList eventList = doc.getElementsByTagName("events").item(0).getChildNodes();
+            double sim = intersection / union;
+            if (Double.isNaN(sim)) sim = 1;
 
-        for (int i = 0; i < eventList.getLength(); i++) {
-            Node event = eventList.item(i);
-            if (event.getNodeName()=="event"){
-                Element eventElement = (Element) event;
-            }
+            jaccardString.append( sim).append(",");
+
         }
+        double activityIntersection = getIntersectingActivitiesSize();
+        double activityUnion = originalDcrModel.getActivities().size() + comparativeDcrModel.getActivities().size() - activityIntersection;
 
-        //Set constraints in unionRelationSet
-        NodeList constraints = doc.getElementsByTagName("constraints").item(0).getChildNodes();
-        for (int j = 0; j < constraints.getLength(); j++) {
-            Node childNode = constraints.item(j);
-            switch (childNode.getNodeName()){
-                case "conditions":
-                case "responses":
-                case "excludes":
-                case "includes":
-                    addToRelationSet(dcrModel,childNode.getChildNodes());
-                    break;
+        jaccardString.append(activityIntersection / activityUnion);
 
-            }
-        }
-        return dcrModel;
+        return jaccardString.toString();
     }
+
+
     public void loadComparativeModel(String xmlGraphPath) throws IOException, SAXException, ParserConfigurationException {
-        this.comparativeDcrModel = loadModel(xmlGraphPath);
+        this.comparativeDcrModel = new DcrModel();
+        this.comparativeDcrModel.loadModel(xmlGraphPath);
     }
-    private void addToRelationSet(DcrModel dcrModel,NodeList constraintList){
-        for(int i = 0; i < constraintList.getLength(); i++){
-            Node constraint = constraintList.item(i);
 
-            if(constraint.getNodeType() == Node.ELEMENT_NODE){
-
-                Element constraintElement = (Element) constraint;
-
-                String source = constraintElement.getAttribute("sourceId");
-                String target = constraintElement.getAttribute("targetId");
-
-                DcrModel.RELATION relation = DcrModel.RELATION.valueOf(constraint.getNodeName().toUpperCase());
-                dcrModel.addRelation(Triple.of(source,target, relation));
-
-            }
-        }
-
+    public void loadComparativeModel(DcrModel adaptedModel) {
+        this.comparativeDcrModel = adaptedModel;
     }
 }

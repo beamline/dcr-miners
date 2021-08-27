@@ -32,15 +32,20 @@ public class StreamTester {
         boolean saveAsXml = Boolean.parseBoolean(args[4]);
         boolean compareToDisCoveR = Boolean.parseBoolean(args[5]); // false for reference model true for DisCoveR at windowsize
         boolean saveEventLogs= Boolean.parseBoolean(args[6]);
-        String[] windowSizesStringList = args[7].split(" ");
-        int observationsBeforeEvaluation = Integer.parseInt(args[8]);
+        String[] traceWindowSizesStringList = args[7].split(" ");
+        String[] maxTracesStringList = args[8].split(" ");
+        int observationsBeforeEvaluation = Integer.parseInt(args[9]);
+        String[] dcrConstraints = args[10].split(" ");
         //
 
-        Set<Integer> windowSizes = new HashSet<>();
-        for (String size : windowSizesStringList ){
-            windowSizes.add(Integer.parseInt(size));
+        Set<Integer> traceWindowSizes = new HashSet<>();
+        for (String size : traceWindowSizesStringList ){
+            traceWindowSizes.add(Integer.parseInt(size));
         }
-
+        Set<Integer> maxTracesList = new HashSet<>();
+        for (String size : maxTracesStringList ){
+            maxTracesList.add(Integer.parseInt(size));
+        }
 
         String rootPath = System.getProperty("user.dir");
         String currentPath = rootPath + "/src/main/java/beamline/dcr/testsoftware";
@@ -49,12 +54,14 @@ public class StreamTester {
 
         String groundTruthModelPath = currentPath + "/groundtruthmodels/Process" + eventlogNumber +".xml";
 
+        for(int maxTraces : maxTracesList){
 
-        for(int windowSize : windowSizes){
+
+            for(int traceSize : traceWindowSizes){
 
 
             String discoverModelPath = currentPath + "/discovermodels/DCR_graph" + eventlogNumber +
-                    "_online_" +windowSize+".xml";
+                    "_online_" +traceSize+".xml";
             String compareModel = compareToDisCoveR ? discoverModelPath: groundTruthModelPath ;
 
 
@@ -67,15 +74,20 @@ public class StreamTester {
             coll.add(transParam);
             MinerParameterValue relationThresholdParam = new MinerParameterValue("Relations Threshold", relationsThreshold);
             coll.add(relationThresholdParam);
+            MinerParameterValue dcrConstraintsParam = new MinerParameterValue("DCR Constraints", dcrConstraints);
+            coll.add(dcrConstraintsParam);
 
-            String fileName = currentPath + "/minedmodels/online/online_mining_" + eventlogNumber+"_window" + windowSize+
+            String fileName = currentPath + "/minedmodels/online/online_mining_" + eventlogNumber+
+                    "_map_" + maxTraces+ "_trace" + traceSize+
                     "_" + java.time.LocalDate.now();
             MinerParameterValue fileParam1 = new MinerParameterValue("filename", fileName);
             coll.add(fileParam1);
             MinerParameterValue fileParam2 = new MinerParameterValue("Stream Miner", "Sliding Window");
             coll.add(fileParam2);
-            MinerParameterValue fileParam3 = new MinerParameterValue("Max Size Window", windowSize);
+            MinerParameterValue fileParam3 = new MinerParameterValue("Trace Window Size", traceSize);
             coll.add(fileParam3);
+            MinerParameterValue fileParam4 = new MinerParameterValue("Max Traces", maxTraces);
+            coll.add(fileParam4);
 
 
             sc.configure(coll);
@@ -132,7 +144,7 @@ public class StreamTester {
                         if (currentObservedEvents % observationsBeforeEvaluation == 0) {
                             if (saveEventLogs){
                                 sc.saveCurrentWindowLog(currentPath + "/eventlogs/online/online_eventlog_graph"+eventlogNumber+
-                                        "_windowsize"+windowSize + "_obs" + currentObservedEvents);
+                                        "maxtraces"+maxTraces +"_tracesize"+traceSize + "_obs" + currentObservedEvents);
                             }
 
 
@@ -152,10 +164,10 @@ public class StreamTester {
                                     "," + modelComparison.getRecall() + "," + conformanceChecking.getFitness() + "," +
                                     conformanceChecking.getPrecision() + "," + conformanceChecking.getIllegalTracesString();
 
-                            csvResults.append(windowSize).append(",").append(currentObservedEvents).append(",")
+                            csvResults.append(maxTraces + ",").append(traceSize).append(",").append(currentObservedEvents).append(",")
                                     .append(row).append("\n");
                             if (saveAsXml){
-                                new DcrModelXML(dcrModel,extendedDFG).toFile(fileName+"_obs"+currentObservedEvents);
+                                new DcrModelXML(dcrModel).toFile(fileName+"_obs"+currentObservedEvents);
                             }
                         }
                     }
@@ -166,6 +178,7 @@ public class StreamTester {
 
 
             sc.stop();
+        }
         }
         String outputDirectoryPath =  currentPath + "/evaluations/"+ eventlogNumber +"/modelmodel";
 
@@ -179,7 +192,7 @@ public class StreamTester {
         myObj.createNewFile();
         try {
             FileWriter myWriter = new FileWriter(filePath,true);
-            String columnTitles ="windowSize,observed,model_jaccard,model_precision,model_recall,log_fitness,log_precision,illegal_traces\n";
+            String columnTitles ="maxTraces,traceSize,observed,model_jaccard,model_precision,model_recall,log_fitness,log_precision,illegal_traces\n";
 
             myWriter.write(columnTitles+csvResults);
             myWriter.close();

@@ -28,7 +28,9 @@ public class BasicTester {
         String[] transitiveReductionList =  args[3].split(" ");
         boolean saveAsXml = Boolean.parseBoolean(args[4]);
         boolean compareToDisCoveR = Boolean.parseBoolean(args[5]); // false for reference model true for DisCoveR
-        //
+        String[] dcrConstraints = args[6].split(" ");
+
+
 
 
         DFGBasedMiner sc = new DFGBasedMiner();
@@ -40,6 +42,8 @@ public class BasicTester {
         coll.add(transParam);
         MinerParameterValue relationThresholdParam = new MinerParameterValue("Relations Threshold", relationsThreshold);
         coll.add(relationThresholdParam);
+        MinerParameterValue dcrConstraintsParam = new MinerParameterValue("DCR Constraints", dcrConstraints);
+        coll.add(dcrConstraintsParam);
 
         sc.setStream(new Stream("test", "localhost", ""));
         String rootPath = System.getProperty("user.dir");

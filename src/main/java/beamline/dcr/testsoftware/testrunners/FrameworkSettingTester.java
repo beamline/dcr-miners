@@ -21,6 +21,8 @@ public class FrameworkSettingTester {
 		int relationsThreshold = Integer.parseInt(args[1]);
 		boolean compareToDisCoveR = Boolean.parseBoolean(args[2]); // false for reference model true for DisCoveR
 		boolean createPlots = Boolean.parseBoolean(args[3]);
+
+
 		//
 		String rootPath = System.getProperty("user.dir");
 		String currentPath = rootPath + "/src/main/java/beamline/dcr/testsoftware";
@@ -70,8 +72,10 @@ public class FrameworkSettingTester {
 		String compareModel = compareToDisCoveR ? discoverModelPath : groundTruthModelPath;
 		ConfigurationEvaluation configurationEvaluation = new ConfigurationEvaluation(eventlogNumber,compareModel,extendedDFG,createPlots);
 		configurationEvaluation.startEval();
+
 		sc.stop();
-		System.exit(0);
+		System.out.println("Evaluation for log " + eventlogNumber + " succesfully terminated");
+		//System.exit(0);
 
 
 	}

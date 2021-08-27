@@ -51,4 +51,10 @@ public class UnlimitedStreamMiner implements StreamMiner {
     public void saveLog(String filePath) {
         //Do nothing. Only for saving window
     }
+
+    @Override
+    public int getNumberEventsSaved() {
+
+        return 0;
+    }
 }

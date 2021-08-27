@@ -18,7 +18,7 @@ public class TransitiveReduction {
     private void setUp(UnionRelationSet unionRelationSet, DcrModel.RELATION pattern){
 
         this.reducedPattern = pattern;
-        this.allRelationsWithPattern = unionRelationSet.getDcrRelationWithPattern(pattern);
+        this.allRelationsWithPattern = unionRelationSet.getDcrRelationWithConstraint(pattern);
         //Consider ordering Set in alphabetic order
         //Get set of unique activies
         Set<String> activitySet = new TreeSet<>();
@@ -91,7 +91,7 @@ public class TransitiveReduction {
                 if (!transitivelyReducedMatrix[i].get(j)) {
                     String src = activityList.get(i);
                     String tar = activityList.get(j);
-                    unionRelationSet.removeDCRRelation(Triple.of(src,tar, reducedPattern));
+                    unionRelationSet.removeDcrRelation(Triple.of(src,tar, reducedPattern));
 
                 }
             }
