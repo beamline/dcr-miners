@@ -53,9 +53,38 @@ public class StreamTester {
         StringBuilder csvResults = new StringBuilder();
 
         String groundTruthModelPath = currentPath + "/groundtruthmodels/Process" + eventlogNumber +".xml";
+        String streamPath = currentPath + "/eventlogs/eventlog_graph"+eventlogNumber+ ".xes";
+
+        File xesFile = new File(streamPath);
+        XesXmlParser xesParser = new XesXmlParser();
+
+        List<XLog> parsedXesFile = xesParser.parse(xesFile);
+
+        //Define test stream
+        Map<String, List<String>> traceCollection = new HashMap<String, List<String>>();
+        Map<String,Integer> traceExecutionTime= new HashMap<String, Integer>();
+        Map<String,Integer> traceCurrentIndex= new HashMap<String, Integer>();
+        int counter = 1;
+        int totalObservations = 0;
+        for (XLog traces : parsedXesFile){
+            for (XTrace trace : traces){
+                String traceId = trace.getAttributes().get("concept:name").toString();
+                if (!traceCollection.containsKey(traceId)){
+                    traceCollection.put(traceId,new ArrayList<>());
+                    traceExecutionTime.put(traceId,(counter % 5)+1);
+                    traceCurrentIndex.put(traceId,0);
+                    counter ++;
+                }
+                for (XEvent event : trace ){
+                    totalObservations++;
+                    String activity = event.getAttributes().get("concept:name").toString();
+                    //String activity = event.getAttributes().get("EventName").toString(); // Dreyer's fond
+                    traceCollection.get(traceId).add(activity);
+                }
+            }
+        }
 
         for(int maxTraces : maxTracesList){
-
 
             for(int traceSize : traceWindowSizes){
 
@@ -89,41 +118,8 @@ public class StreamTester {
             MinerParameterValue fileParam4 = new MinerParameterValue("Max Traces", maxTraces);
             coll.add(fileParam4);
 
-
             sc.configure(coll);
 
-
-
-            String streamPath = currentPath + "/eventlogs/eventlog_graph"+eventlogNumber+ ".xes";
-
-            File xesFile = new File(streamPath);
-            XesXmlParser xesParser = new XesXmlParser();
-
-            List<XLog> parsedXesFile = xesParser.parse(xesFile);
-
-            //Define test stream
-            Map<String, List<String>> traceCollection = new HashMap<String, List<String>>();
-            Map<String,Integer> traceExecutionTime= new HashMap<String, Integer>();
-            Map<String,Integer> traceCurrentIndex= new HashMap<String, Integer>();
-            int counter = 1;
-            int totalObservations = 0;
-            for (XLog traces : parsedXesFile){
-                for (XTrace trace : traces){
-                    String traceId = trace.getAttributes().get("concept:name").toString();
-                    if (!traceCollection.containsKey(traceId)){
-                        traceCollection.put(traceId,new ArrayList<>());
-                        traceExecutionTime.put(traceId,(counter % 5)+1);
-                        traceCurrentIndex.put(traceId,0);
-                        counter ++;
-                    }
-                    for (XEvent event : trace ){
-                        totalObservations++;
-                        String activity = event.getAttributes().get("concept:name").toString();
-                        //String activity = event.getAttributes().get("EventName").toString(); // Dreyer's fond
-                        traceCollection.get(traceId).add(activity);
-                    }
-                }
-            }
 
             // simulate stream
             int currentObservedEvents = 0;

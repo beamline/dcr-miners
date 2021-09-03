@@ -32,8 +32,8 @@ public class StreamDateTester {
         boolean saveAsXml = Boolean.parseBoolean(args[4]);
         boolean compareToDisCoveR = Boolean.parseBoolean(args[5]); // false for reference model true for DisCoveR at windowsize
         boolean saveEventLogs= Boolean.parseBoolean(args[6]);
-        String[] traceWindowSizesStringList = args[7].split(" ");
-        String[] maxTracesStringList = args[8].split(" ");
+        String[] traceWindowSizesStringList = args[8].split(" ");
+        String[] maxTracesStringList = args[7].split(" ");
         int observationsBeforeEvaluation = Integer.parseInt(args[9]);
         String[] dcrConstraints = args[10].split(" ");
         //

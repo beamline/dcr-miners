@@ -32,6 +32,7 @@ public class SlidingWindowStreamMiner implements StreamMiner {
         this.maxSizeMapWindow = maxMap;
         this.maxSizeTraceWindow = maxTrace;
     }
+
     @Override
     public void observeEvent(String traceId, String activityName){
         boolean firstOccurrence = true;
@@ -47,7 +48,8 @@ public class SlidingWindowStreamMiner implements StreamMiner {
         } else {
             if(mapQueue.size() >= maxSizeMapWindow){
                 String removedTraceId = mapQueue.poll();
-                observedActivitiesInTrace.remove(removedTraceId);
+                removeTrace(removedTraceId);
+
             }
             observedActivitiesInTrace.put(traceId, new ArrayList<>());
             mapQueue.add(traceId);
@@ -74,15 +76,17 @@ public class SlidingWindowStreamMiner implements StreamMiner {
     private void removeFirstActivity(String traceId){
         List<String> activitiesInTrace = observedActivitiesInTrace.get(traceId);
 
-
         String activityName = activitiesInTrace.get(0);
 
         //Remove index 0 decoration
         ActivityDecoration activityDecoration = extendedDFG.getActivityDecoration(activityName);
         activityDecoration.removeObservation();
         //decrement dfg Relation
-        RelationDecoration relationDecoration = extendedDFG.getRelation(Pair.of(activityName, activitiesInTrace.get(1)));
-        relationDecoration.decrementFrequency();
+        if(activitiesInTrace.size()>1){
+            RelationDecoration relationDecoration = extendedDFG.getRelation(Pair.of(activityName, activitiesInTrace.get(1)));
+            relationDecoration.decrementFrequency();
+
+        }
         activitiesInTrace.remove(0);
 
         Set<String> firstActivityOccurrence = new HashSet<>();
@@ -97,6 +101,14 @@ public class SlidingWindowStreamMiner implements StreamMiner {
             activityDecoration.decrementDecorations(firstOccurrenceOfActivity);
 
         }
+    }
+    private void removeTrace(String traceId){
+
+        while (observedActivitiesInTrace.get(traceId).size()>0){
+            removeFirstActivity(traceId);
+        }
+        observedActivitiesInTrace.remove(traceId);
+
     }
     @Override
     public void saveLog(String fileName) {

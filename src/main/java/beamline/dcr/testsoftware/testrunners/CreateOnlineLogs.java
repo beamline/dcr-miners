@@ -32,7 +32,7 @@ public class CreateOnlineLogs {
 
         String rootPath = System.getProperty("user.dir");
         String currentPath = rootPath + "/src/main/java/beamline/dcr/testsoftware";
-        String pathToStreamlogs = currentPath + "/eventlogs/streamlogs/modified/";
+        String pathToStreamlogs = currentPath + "/eventlogs/streamlogs/";
 
 
 
@@ -61,41 +61,42 @@ public class CreateOnlineLogs {
                 MinerParameterValue fileParam4 = new MinerParameterValue("Max Traces", maxTraces);
                 coll.add(fileParam4);
                 sc.configure(coll);
-                sc.setStream(new Stream("test", "localhost", ""));
-                sc.start();
+
 
 
                 String streamNameExt = listOfEventStreams[i].getName();
                 String streamName = streamNameExt.replace(".csv","");
+                if (streamName.contains("500") && streamName.contains("pm")){
+                    BufferedReader csvReader = new BufferedReader(new FileReader(pathToStreamlogs  + streamNameExt));
 
-                BufferedReader csvReader = new BufferedReader(new FileReader(pathToStreamlogs  + streamNameExt));
+                    String row;
+                    int currentObservedEvents = 0;
+                    while ((row = csvReader.readLine()) != null) {
 
-                String row;
-                int currentObservedEvents = 0;
-                while ((row = csvReader.readLine()) != null) {
+                        if (currentObservedEvents==0){
+                            currentObservedEvents ++;
+                            continue;
+                        }
+                        String[] data = row.split(",");
+                        sc.consumeEvent(data[1],data[2]);
 
-                    if (currentObservedEvents==0){
-                        currentObservedEvents ++;
-                        continue;
+
+                        if (currentObservedEvents % observationsBeforeEvaluation == 0) {
+                            //Save logs for online comparison
+                            System.out.println(currentObservedEvents);
+                            sc.saveCurrentWindowLog("/Users/lassestarklit/Downloads/DisCoveR20210809/eventlogs/online/"+currentObservedEvents+"_mt"+maxTraces+"_ws"+traceSize+"_"+streamName);
+
+                        }
+
+                        currentObservedEvents++;
                     }
-                    String[] data = row.split(",");
-                    sc.consumeEvent(data[1],data[2]);
 
-
-                    if (currentObservedEvents % observationsBeforeEvaluation == 0) {
-                        //Save logs for online comparison
-                        System.out.println(currentObservedEvents);
-                        sc.saveCurrentWindowLog("/Users/lassestarklit/Downloads/DisCoveR20210809/eventlogs/online/modified/"+currentObservedEvents+"_mt"+maxTraces+"_ws"+traceSize+"_"+streamName);
-
-                    }
-
-                    currentObservedEvents++;
+                    csvReader.close();
+                    System.out.println(streamName + " processed");
                 }
 
-                csvReader.close();
-                System.out.println(streamName + " processed");
-                sc.stop();
-                }
+
+            }
         }
         System.exit(1);
 
