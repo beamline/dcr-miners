@@ -30,7 +30,7 @@
 		<dependency>
 			<groupId>com.github.beamline</groupId>
 			<artifactId>core</artifactId>
-			<version>0.0.16</version>
+			<version>0.0.19</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.beamline</groupId>
