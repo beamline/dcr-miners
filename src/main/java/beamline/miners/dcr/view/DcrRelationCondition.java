@@ -7,7 +7,7 @@ public class DcrRelationCondition extends DotEdge {
 
 	public DcrRelationCondition(DotNode source, DotNode target) {
 		super(source, target);
-		
+
 		setOption("color", "#FFA500");
 		setOption("arrowhead", "dotnormal");
 		setOption("arrowsize", "0.5");

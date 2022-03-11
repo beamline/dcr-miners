@@ -7,7 +7,7 @@ public class DcrRelationSpawn extends DotEdge {
 
 	public DcrRelationSpawn(DotNode source, DotNode target) {
 		super(source, target);
-		
+
 		setOption("color", "#334960");
 		setOption("arrowhead", "normal");
 		setOption("arrowtail", "none");

@@ -6,7 +6,7 @@ public class DcrActivity extends DotNode {
 
 	protected DcrActivity(String label) {
 		super(label, null);
-		
+
 		setOption("fontname", "arial");
 		setOption("fontsize", "10");
 		setOption("fillcolor", "#F8F6EC");
@@ -14,7 +14,7 @@ public class DcrActivity extends DotNode {
 		setOption("style", "filled");
 		setOption("color", "#CBCBCB");
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return getLabel().hashCode();

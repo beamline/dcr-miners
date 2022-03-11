@@ -10,12 +10,12 @@ public class ExtendedDFG {
 
 	private Map<String, ActivityDecoration> activities;
 	private Map<Pair<String, String>, RelationDecoration> relations;
-	
+
 	public ExtendedDFG() {
 		this.activities = new HashMap<String, ActivityDecoration>();
 		this.relations = new HashMap<Pair<String, String>, RelationDecoration>();
 	}
-	
+
 	public ActivityDecoration addActivityIfNeeded(String activity) {
 		if (activities.containsKey(activity)) {
 			return activities.get(activity);
@@ -24,7 +24,7 @@ public class ExtendedDFG {
 		activities.put(activity, decoration);
 		return decoration;
 	}
-	
+
 	public RelationDecoration addRelationIfNeeded(String source, String sink) {
 		Pair<String, String> relation = new ImmutablePair<String, String>(source, sink);
 		if (relations.containsKey(relation)) {
@@ -34,18 +34,21 @@ public class ExtendedDFG {
 		relations.put(relation, decoration);
 		return decoration;
 	}
-	public RelationDecoration getRelation(Pair<String, String> relationPair){
+
+	public RelationDecoration getRelation(Pair<String, String> relationPair) {
 		return relations.get(relationPair);
 	}
-	public void decrementRelationFrequency(Pair<String, String> relationPair){
+
+	public void decrementRelationFrequency(Pair<String, String> relationPair) {
 		RelationDecoration relationDecoration = relations.get(relationPair);
 		int frequency = relationDecoration.getFrequency();
-		if(frequency<=1){
+		if (frequency <= 1) {
 			relations.remove(relationPair);
-		}else{
+		} else {
 			relationDecoration.decrementFrequency();
 		}
 	}
+
 	public Set<String> getActivities() {
 		return activities.keySet();
 	}
@@ -54,11 +57,9 @@ public class ExtendedDFG {
 		return relations.keySet();
 	}
 
-	public Set<Pair<String, String>> getRelationsAboveThreshold(int threshold){
-		return relations.entrySet().stream()
-				.filter(entry -> entry.getValue().getFrequency() > threshold)
-				.map(Map.Entry::getKey)
-				.collect(Collectors.toSet());
+	public Set<Pair<String, String>> getRelationsAboveThreshold(int threshold) {
+		return relations.entrySet().stream().filter(entry -> entry.getValue().getFrequency() > threshold)
+				.map(Map.Entry::getKey).collect(Collectors.toSet());
 
 	}
 
@@ -69,7 +70,7 @@ public class ExtendedDFG {
 	public RelationDecoration getRelationDecoration(Pair<String, String> relation) {
 		return this.relations.get(relation);
 	}
-	
+
 	public Set<String> getIncomingActivities(String candidate) {
 		Set<String> result = new HashSet<String>();
 		for (Pair<String, String> relation : getRelations()) {
@@ -102,26 +103,25 @@ public class ExtendedDFG {
 		return getOutgoingActivities(candidate).equals(getIncomingActivities(candidate));
 	}
 
-
 	@Override
 	public String toString() {
 		StringBuffer b = new StringBuffer();
-		
+
 		b.append("ACTIVITIES");
 		b.append(System.lineSeparator());
-		
+
 		for (String activity : activities.keySet()) {
 			b.append(activity + " - " + activities.get(activity));
 			b.append(System.lineSeparator());
 		}
-		
+
 		b.append("RELATIONS");
 		b.append(System.lineSeparator());
 		for (Pair<String, String> relation : relations.keySet()) {
 			b.append(relation + " - " + relations.get(relation));
 			b.append(System.lineSeparator());
 		}
-		
+
 		return b.toString();
 	}
 }

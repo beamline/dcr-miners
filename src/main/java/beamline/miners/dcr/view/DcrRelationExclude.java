@@ -7,7 +7,7 @@ public class DcrRelationExclude extends DotEdge {
 
 	public DcrRelationExclude(DotNode source, DotNode target) {
 		super(source, target);
-		
+
 		setOption("color", "#FC0C1B");
 		setOption("arrowhead", "normal");
 		setOption("arrowtail", "none");

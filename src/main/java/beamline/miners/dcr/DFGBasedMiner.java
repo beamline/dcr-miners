@@ -13,6 +13,7 @@ import org.deckfour.xes.model.XTrace;
 import org.reflections.Reflections;
 
 import beamline.miners.dcr.annotations.ExposedDcrPattern;
+import beamline.miners.dcr.exceptions.PatternUnknownException;
 import beamline.miners.dcr.model.TransitiveReduction;
 import beamline.miners.dcr.model.patterns.RelationPattern;
 import beamline.miners.dcr.model.relations.DcrModel;
@@ -25,11 +26,10 @@ import beamline.miners.dcr.model.streamminers.UnlimitedStreamMiner;
 import beamline.models.algorithms.StreamMiningAlgorithm;
 
 public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
-	// Not configured with XML download to beamline
-	// XML view only works locally from testrunners
 
 	private Reflections reflections;
 	private Set<Class<?>> dcrPatternClasses;
+	private DcrModel cached;
 
 	private StreamMiner streamMiner;
 	private UnionRelationSet unionRelationSet;
@@ -37,30 +37,83 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 	private String[] transReductionList = new String[] { "Condition", "Response" };
 
 	private String[] dcrPatternList = new String[] { "Condition", "Response", "Exclude", "Include" };
-	private String[] dcrConstraintList = new String[] { "Condition", "Response", "Exclude", "Include" };
+	private RELATION[] dcrConstraintList = new RELATION[] { RELATION.CONDITION, RELATION.RESPONSE, RELATION.EXCLUDE,
+			RELATION.INCLUDE };
 	private Set<String> postorderTraversal;
 
 	public DFGBasedMiner() {
 		this.reflections = new Reflections("beamline");
 		this.dcrPatternClasses = reflections.getTypesAnnotatedWith(ExposedDcrPattern.class);
-		
+
 		this.streamMiner = new UnlimitedStreamMiner();
 	}
-	
+
 	public DFGBasedMiner(int maxEvents, int maxTraces) {
 		this();
 		this.streamMiner = new SlidingWindowStreamMiner(maxEvents, maxTraces);
+	}
+
+	/**
+	 * The patters specified with this methods should be classes annotated with the
+	 * {@link ExposedDcrPattern} annotation.
+	 * 
+	 * @param dcrPatternList
+	 * @throws PatternUnknownException
+	 */
+	public void setDcrPatternsForMining(String... dcrPatternList) throws PatternUnknownException {
+		for (String p : dcrPatternList) {
+			if (getExposedPatternClass(p) == null) {
+				throw new PatternUnknownException();
+			}
+		}
+		this.dcrPatternList = dcrPatternList;
+
+	}
+
+	public void setStreamMinerType(StreamMiner type) {
+		this.streamMiner = type;
+	}
+
+	public void setTransitiveReductionList(String[] transReductionList) {
+		this.transReductionList = transReductionList;
+	}
+
+	public void setRelationsThreshold(int relationsThreshold) {
+		this.relationsThreshold = relationsThreshold;
+	}
+
+	public void setDcrConstraintsForVisualization(RELATION... dcrConstraintList) {
+		this.dcrConstraintList = dcrConstraintList;
+	}
+
+	public void configureSlidingWindowStrategy(String[] dcrPatternList, int maxTraceSize, int maxTraces,
+			String[] transitiveReductionList, int relationsThreshold, RELATION[] dcrConstraints)
+			throws PatternUnknownException {
+		setDcrPatternsForMining(dcrPatternList);
+		setStreamMinerType(new SlidingWindowStreamMiner(maxTraceSize, maxTraces));
+		setTransitiveReductionList(transitiveReductionList);
+		setRelationsThreshold(relationsThreshold);
+		setDcrConstraintsForVisualization(dcrConstraints);
+	}
+
+	public void configureUnlimitedMemoryStrategy(String[] dcrPatternList, String[] transitiveReductionList,
+			int relationsThreshold, RELATION[] dcrConstraints) throws PatternUnknownException {
+		setDcrPatternsForMining(dcrPatternList);
+		setStreamMinerType(new UnlimitedStreamMiner());
+		setTransitiveReductionList(transitiveReductionList);
+		setRelationsThreshold(relationsThreshold);
+		setDcrConstraintsForVisualization(dcrConstraints);
 	}
 
 	@Override
 	public DcrModel ingest(XTrace event) {
 		String caseID = XConceptExtension.instance().extractName(event);
 		String activityName = XConceptExtension.instance().extractName(event.get(0));
-		
+
 		this.streamMiner.observeEvent(caseID, activityName);
-		return getDcrModel();
+		return cached;
 	}
-	
+
 	public DcrModel convert(ExtendedDFG dfg) throws IllegalAccessException, InstantiationException {
 		DcrModel model = new DcrModel();
 		this.postorderTraversal = new LinkedHashSet<>();
@@ -81,8 +134,7 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 
 		model.addActivities(dfg.getActivities());
 		// project user selected patterns to DCR Model
-		for (String dcrConstraint : dcrConstraintList) {
-			RELATION enumConstraint = RELATION.valueOf(dcrConstraint.toUpperCase());
+		for (RELATION enumConstraint : dcrConstraintList) {
 			Set<Triple<String, String, RELATION>> minedConstraints = unionRelationSet
 					.getDcrRelationWithConstraint(enumConstraint);
 			model.addRelations(minedConstraints);
@@ -168,13 +220,13 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 	public DcrModel getDcrModel() {
 
 		try {
-			return convert(streamMiner.getExtendedDFG());
+			cached = convert(streamMiner.getExtendedDFG());
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {
 			e.printStackTrace();
 		}
-		return null;
+		return cached;
 	}
 	// For testsoftware
 
@@ -193,5 +245,4 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 	public UnionRelationSet getUnionRelationSet() {
 		return unionRelationSet;
 	}
-
 }

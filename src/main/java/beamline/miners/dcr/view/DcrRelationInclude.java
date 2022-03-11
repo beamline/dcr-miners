@@ -7,7 +7,7 @@ public class DcrRelationInclude extends DotEdge {
 
 	public DcrRelationInclude(DotNode source, DotNode target) {
 		super(source, target);
-		
+
 		setOption("color", "#30A627");
 		setOption("arrowhead", "normal");
 		setOption("arrowtail", "none");

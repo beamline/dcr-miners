@@ -12,53 +12,52 @@ import java.util.stream.Collectors;
 
 public class UnionRelationSet {
 
-    private final Integer threshold;
-    private ExtendedDFG extendedDFG;
-    private Set<Triple<String,String, DcrModel.RELATION>> DcrRelations =  new HashSet<>();
+	private final Integer threshold;
+	private ExtendedDFG extendedDFG;
+	private Set<Triple<String, String, DcrModel.RELATION>> DcrRelations = new HashSet<>();
 
-    public UnionRelationSet(ExtendedDFG extendedDFG, Integer threshold){
-        this.extendedDFG = extendedDFG;
-        this.threshold = threshold;
-    }
-    public Set<Pair<String, String>> getDFGRelations(){
-        return extendedDFG.getRelationsAboveThreshold(threshold);
-    }
+	public UnionRelationSet(ExtendedDFG extendedDFG, Integer threshold) {
+		this.extendedDFG = extendedDFG;
+		this.threshold = threshold;
+	}
 
-    public ActivityDecoration getActivityDecoration(String activity){
-        return extendedDFG.getActivityDecoration(activity);
-    }
+	public Set<Pair<String, String>> getDFGRelations() {
+		return extendedDFG.getRelationsAboveThreshold(threshold);
+	}
 
-    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelations() {
-        return DcrRelations;
-    }
+	public ActivityDecoration getActivityDecoration(String activity) {
+		return extendedDFG.getActivityDecoration(activity);
+	}
 
-    public void addDcrRelation(Triple<String,String, DcrModel.RELATION> relation){
-        DcrRelations.add(relation);
-    }
+	public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelations() {
+		return DcrRelations;
+	}
 
-    public void removeDcrRelation(Triple<String,String, DcrModel.RELATION> relation){
-        DcrRelations.remove(relation);
-    }
+	public void addDcrRelation(Triple<String, String, DcrModel.RELATION> relation) {
+		DcrRelations.add(relation);
+	}
 
+	public void removeDcrRelation(Triple<String, String, DcrModel.RELATION> relation) {
+		DcrRelations.remove(relation);
+	}
 
-    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithConstraint(DcrModel.RELATION constraint){
-        return DcrRelations.stream()
-                .filter(entry -> entry.getRight() == constraint)
-                .collect(Collectors.toSet());
-    }
+	public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithConstraint(DcrModel.RELATION constraint) {
+		return DcrRelations.stream().filter(entry -> entry.getRight() == constraint).collect(Collectors.toSet());
+	}
 
-    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithTarget(String target, DcrModel.RELATION relation){
-        return DcrRelations.stream()
-                .filter(entry -> entry.getMiddle().equals(target) && entry.getRight() == relation)
-                .collect(Collectors.toSet());
-    }
-    public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithSource(String source, DcrModel.RELATION relation){
-        return DcrRelations.stream()
-                .filter(entry -> entry.getLeft().equals(source) && entry.getRight() == relation)
-                .collect(Collectors.toSet());
-    }
+	public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithTarget(String target,
+			DcrModel.RELATION relation) {
+		return DcrRelations.stream().filter(entry -> entry.getMiddle().equals(target) && entry.getRight() == relation)
+				.collect(Collectors.toSet());
+	}
 
-    public String[] getUniqueActivities(){
-        return extendedDFG.getActivities().toArray(new String[0]);
-    }
+	public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithSource(String source,
+			DcrModel.RELATION relation) {
+		return DcrRelations.stream().filter(entry -> entry.getLeft().equals(source) && entry.getRight() == relation)
+				.collect(Collectors.toSet());
+	}
+
+	public String[] getUniqueActivities() {
+		return extendedDFG.getActivities().toArray(new String[0]);
+	}
 }

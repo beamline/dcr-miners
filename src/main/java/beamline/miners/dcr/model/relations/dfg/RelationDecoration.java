@@ -8,12 +8,14 @@ public class RelationDecoration {
 		frequency++;
 	}
 
-	public void decrementFrequency(){frequency--;}
-	
+	public void decrementFrequency() {
+		frequency--;
+	}
+
 	public int getFrequency() {
 		return frequency;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "frequency: " + frequency;

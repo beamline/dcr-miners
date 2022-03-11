@@ -7,7 +7,7 @@ public class DcrRelationResponse extends DotEdge {
 
 	public DcrRelationResponse(DotNode source, DotNode target) {
 		super(source, target);
-		
+
 		setOption("color", "#2993FC");
 		setOption("arrowhead", "normal");
 		setOption("arrowtail", "dot");

@@ -9,60 +9,53 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Set;
 
-@ExposedDcrPattern(
-        name = "Condition",
-        dependencies = {}
-        )
+@ExposedDcrPattern(name = "Condition", dependencies = {})
 public class Condition implements RelationPattern {
 
-    @Override
-    public void populateConstraint(UnionRelationSet unionRelationSet) {
-        Set<Pair<String,String>> dfgRelations = unionRelationSet.getDFGRelations();
+	@Override
+	public void populateConstraint(UnionRelationSet unionRelationSet) {
+		Set<Pair<String, String>> dfgRelations = unionRelationSet.getDFGRelations();
 
-        for (Pair<String,String> relation : dfgRelations){
+		for (Pair<String, String> relation : dfgRelations) {
 
-            String source = relation.getLeft();
-            double avgFOSource =
-                    unionRelationSet.getActivityDecoration(source).getAverageFirstOccurrence();
-            double numTraceAppearancesSource = unionRelationSet.getActivityDecoration(source).getTraceAppearances();
-            String target = relation.getRight();
-            double avgFOTarget =
-                    unionRelationSet.getActivityDecoration(target).getAverageFirstOccurrence();
-            double numTraceAppearancesTarget = unionRelationSet.getActivityDecoration(target).getTraceAppearances();
+			String source = relation.getLeft();
+			double avgFOSource = unionRelationSet.getActivityDecoration(source).getAverageFirstOccurrence();
+			double numTraceAppearancesSource = unionRelationSet.getActivityDecoration(source).getTraceAppearances();
+			String target = relation.getRight();
+			double avgFOTarget = unionRelationSet.getActivityDecoration(target).getAverageFirstOccurrence();
+			double numTraceAppearancesTarget = unionRelationSet.getActivityDecoration(target).getTraceAppearances();
 
-            if(avgFOSource<avgFOTarget && numTraceAppearancesSource >= numTraceAppearancesTarget){
-                unionRelationSet.addDcrRelation(Triple.of(source, target, DcrModel.RELATION.CONDITION));
-            }
+			if (avgFOSource < avgFOTarget && numTraceAppearancesSource >= numTraceAppearancesTarget) {
+				unionRelationSet.addDcrRelation(Triple.of(source, target, DcrModel.RELATION.CONDITION));
+			}
 
-        }
-    }
+		}
+	}
 
-    //For framework setting test
-    public void populateConstraint(UnionRelationSet unionRelationSet,Set<Integer> parameterCombination) {
-        Set<Pair<String,String>> dfgRelations = unionRelationSet.getDFGRelations();
+	// For framework setting test
+	public void populateConstraint(UnionRelationSet unionRelationSet, Set<Integer> parameterCombination) {
+		Set<Pair<String, String>> dfgRelations = unionRelationSet.getDFGRelations();
 
-        for (Pair<String,String> relation : dfgRelations){
-            String source = relation.getLeft();
-            double avgFOSource =
-                    unionRelationSet.getActivityDecoration(source).getAverageFirstOccurrence();
-            double numTraceAppearancesSource = unionRelationSet.getActivityDecoration(source).getTraceAppearances();
-            String target = relation.getRight();
-            double avgFOTarget =
-                    unionRelationSet.getActivityDecoration(target).getAverageFirstOccurrence();
-            double numTraceAppearancesTarget = unionRelationSet.getActivityDecoration(target).getTraceAppearances();
+		for (Pair<String, String> relation : dfgRelations) {
+			String source = relation.getLeft();
+			double avgFOSource = unionRelationSet.getActivityDecoration(source).getAverageFirstOccurrence();
+			double numTraceAppearancesSource = unionRelationSet.getActivityDecoration(source).getTraceAppearances();
+			String target = relation.getRight();
+			double avgFOTarget = unionRelationSet.getActivityDecoration(target).getAverageFirstOccurrence();
+			double numTraceAppearancesTarget = unionRelationSet.getActivityDecoration(target).getTraceAppearances();
 
-            boolean isCondition = true;
-            if(parameterCombination.contains(1)){
-                isCondition = avgFOSource<avgFOTarget;
-                if(parameterCombination.contains(2) && isCondition ){
-                    isCondition = numTraceAppearancesSource >= numTraceAppearancesTarget;
-                }
-            }
+			boolean isCondition = true;
+			if (parameterCombination.contains(1)) {
+				isCondition = avgFOSource < avgFOTarget;
+				if (parameterCombination.contains(2) && isCondition) {
+					isCondition = numTraceAppearancesSource >= numTraceAppearancesTarget;
+				}
+			}
 
-            if(isCondition){
-                unionRelationSet.addDcrRelation(Triple.of(source, target, DcrModel.RELATION.CONDITION));
-            }
+			if (isCondition) {
+				unionRelationSet.addDcrRelation(Triple.of(source, target, DcrModel.RELATION.CONDITION));
+			}
 
-        }
-    }
+		}
+	}
 }

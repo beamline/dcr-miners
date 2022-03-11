@@ -9,6 +9,6 @@ import static java.lang.annotation.ElementType.TYPE;
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface ExposedDcrPattern {
-    String name();
-    String[] dependencies();
+	String name();
+	String[] dependencies();
 }

@@ -15,20 +15,20 @@ public class DcrModelView extends Dot {
 
 	private DcrModel model;
 	Map<String, DotNode> activityToNode;
-	
+
 	public DcrModelView(DcrModel model) {
 		this.model = model;
 		this.activityToNode = new HashMap<String, DotNode>();
-		
+
 		realize();
 	}
-	
+
 	private void realize() {
-		for(Triple<String, String, RELATION> r : model.getRelations()) {
+		for (Triple<String, String, RELATION> r : model.getRelations()) {
 			addRelation(r.getLeft(), r.getMiddle(), r.getRight());
 		}
 	}
-	
+
 	public DotNode getNodeIfNeeded(String activity) {
 		if (!activityToNode.containsKey(activity)) {
 			DcrActivity node = new DcrActivity(activity);
@@ -37,31 +37,33 @@ public class DcrModelView extends Dot {
 		}
 		return activityToNode.get(activity);
 	}
-	
+
 	public void addRelation(String source, String target, RELATION relation) {
 		DotNode sourceNode = getNodeIfNeeded(source);
 		DotNode targetNode = getNodeIfNeeded(target);
-		
+
 		DotEdge edge = null;
 		switch (relation) {
-			case CONDITION:
-				edge = new DcrRelationCondition(sourceNode, targetNode);
-				break;
-			case RESPONSE:
-				edge = new DcrRelationResponse(sourceNode, targetNode);
-				break;
-			case INCLUDE:
-				edge = new DcrRelationInclude(sourceNode, targetNode);
-				break;
-			case EXCLUDE:
-				edge = new DcrRelationExclude(sourceNode, targetNode);
-				break;
-			case SPAWN:
-				edge = new DcrRelationSpawn(sourceNode, targetNode);
-				break;
-			case MILESTONE:
-				edge = new DcrRelationMilestone(sourceNode, targetNode);
-				break;
+		case CONDITION:
+			edge = new DcrRelationCondition(sourceNode, targetNode);
+			break;
+		case RESPONSE:
+			edge = new DcrRelationResponse(sourceNode, targetNode);
+			break;
+		case INCLUDE:
+			edge = new DcrRelationInclude(sourceNode, targetNode);
+			break;
+		case EXCLUDE:
+			edge = new DcrRelationExclude(sourceNode, targetNode);
+			break;
+		case SPAWN:
+			edge = new DcrRelationSpawn(sourceNode, targetNode);
+			break;
+		case MILESTONE:
+			edge = new DcrRelationMilestone(sourceNode, targetNode);
+			break;
+		default:
+			break;
 		}
 		if (edge != null) {
 			addEdge(edge);

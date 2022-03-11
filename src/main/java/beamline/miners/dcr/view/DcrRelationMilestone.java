@@ -7,7 +7,7 @@ public class DcrRelationMilestone extends DotEdge {
 
 	public DcrRelationMilestone(DotNode source, DotNode target) {
 		super(source, target);
-		
+
 		setOption("color", "#BC1AF2");
 		setOption("arrowhead", "odiamondnormal");
 		setOption("arrowtail", "none");

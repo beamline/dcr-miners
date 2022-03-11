@@ -20,153 +20,155 @@ import java.io.File;
 import java.util.*;
 
 public class SlidingWindowStreamMiner implements StreamMiner {
-    //based on number of elements in queue
-    Map<String, List<String>> observedActivitiesInTrace = new HashMap<>();
-    Queue<String> mapQueue = new LinkedList<>();
-    private Map<String, String> latestActivityInCase = new HashMap<String, String>();
-    private ExtendedDFG extendedDFG = new ExtendedDFG();
+	// based on number of elements in queue
+	Map<String, List<String>> observedActivitiesInTrace = new HashMap<>();
+	Queue<String> mapQueue = new LinkedList<>();
+	private Map<String, String> latestActivityInCase = new HashMap<String, String>();
+	private ExtendedDFG extendedDFG = new ExtendedDFG();
 
-    private final int maxSizeTraceWindow;
-    private final int maxSizeMapWindow;
+	private final int maxSizeTraceWindow;
+	private final int maxSizeMapWindow;
 
-    public SlidingWindowStreamMiner(int maxTrace,int maxMap) {
-        this.maxSizeMapWindow = maxMap;
-        this.maxSizeTraceWindow = maxTrace;
-    }
+	public SlidingWindowStreamMiner(int maxEventsPerTrace, int maxTraces) {
+		this.maxSizeMapWindow = maxTraces;
+		this.maxSizeTraceWindow = maxEventsPerTrace;
+	}
 
-    @Override
-    public void observeEvent(String traceId, String activityName){
-        boolean firstOccurrence = true;
-        if (observedActivitiesInTrace.containsKey(traceId)) {
-            mapQueue.remove(traceId);
-            mapQueue.add(traceId);
-            if(observedActivitiesInTrace.get(traceId).size()>= maxSizeTraceWindow){
-                removeFirstActivity(traceId);
-            }
-            if (observedActivitiesInTrace.get(traceId).contains(activityName)) {
-                firstOccurrence = false;
-            }
-        } else {
-            if(mapQueue.size() >= maxSizeMapWindow){
-                String removedTraceId = mapQueue.poll();
-                removeTrace(removedTraceId);
+	@Override
+	public void observeEvent(String traceId, String activityName) {
+		boolean firstOccurrence = true;
+		if (observedActivitiesInTrace.containsKey(traceId)) {
+			mapQueue.remove(traceId);
+			mapQueue.add(traceId);
+			if (observedActivitiesInTrace.get(traceId).size() >= maxSizeTraceWindow) {
+				removeFirstActivity(traceId);
+			}
+			if (observedActivitiesInTrace.get(traceId).contains(activityName)) {
+				firstOccurrence = false;
+			}
+		} else {
+			if (mapQueue.size() >= maxSizeMapWindow) {
+				String removedTraceId = mapQueue.poll();
+				removeTrace(removedTraceId);
 
-            }
-            observedActivitiesInTrace.put(traceId, new ArrayList<>());
-            mapQueue.add(traceId);
-        }
-        observedActivitiesInTrace.get(traceId).add(activityName);
-        int currentIndex = observedActivitiesInTrace.get(traceId).size()-1;
-        ActivityDecoration activityDecoration = extendedDFG.addActivityIfNeeded(activityName);
-        activityDecoration.addNewObservation(currentIndex, firstOccurrence);
+			}
+			observedActivitiesInTrace.put(traceId, new ArrayList<>());
+			mapQueue.add(traceId);
+		}
+		observedActivitiesInTrace.get(traceId).add(activityName);
+		int currentIndex = observedActivitiesInTrace.get(traceId).size() - 1;
+		ActivityDecoration activityDecoration = extendedDFG.addActivityIfNeeded(activityName);
+		activityDecoration.addNewObservation(currentIndex, firstOccurrence);
 
-        if (latestActivityInCase.containsKey(traceId)) {
-            String previousActivity = latestActivityInCase.get(traceId);
-            RelationDecoration relationDecoration = extendedDFG.addRelationIfNeeded(previousActivity, activityName);
-            relationDecoration.addNewObservation();
-        }
-        latestActivityInCase.put(traceId, activityName);
+		if (latestActivityInCase.containsKey(traceId)) {
+			String previousActivity = latestActivityInCase.get(traceId);
+			RelationDecoration relationDecoration = extendedDFG.addRelationIfNeeded(previousActivity, activityName);
+			relationDecoration.addNewObservation();
+		}
+		latestActivityInCase.put(traceId, activityName);
 
-    }
+	}
 
-    @Override
-    public ExtendedDFG getExtendedDFG() {
-        return extendedDFG;
-    }
+	@Override
+	public ExtendedDFG getExtendedDFG() {
+		return extendedDFG;
+	}
 
-    private void removeFirstActivity(String traceId){
-        List<String> activitiesInTrace = observedActivitiesInTrace.get(traceId);
+	private void removeFirstActivity(String traceId) {
+		List<String> activitiesInTrace = observedActivitiesInTrace.get(traceId);
 
-        String activityName = activitiesInTrace.get(0);
+		String activityName = activitiesInTrace.get(0);
 
-        //Remove index 0 decoration
-        ActivityDecoration activityDecoration = extendedDFG.getActivityDecoration(activityName);
-        activityDecoration.removeObservation();
-        //decrement dfg Relation
-        if(activitiesInTrace.size()>1){
-            RelationDecoration relationDecoration = extendedDFG.getRelation(Pair.of(activityName, activitiesInTrace.get(1)));
-            relationDecoration.decrementFrequency();
+		// Remove index 0 decoration
+		ActivityDecoration activityDecoration = extendedDFG.getActivityDecoration(activityName);
+		activityDecoration.removeObservation();
+		// decrement dfg Relation
+		if (activitiesInTrace.size() > 1) {
+			RelationDecoration relationDecoration = extendedDFG
+					.getRelation(Pair.of(activityName, activitiesInTrace.get(1)));
+			relationDecoration.decrementFrequency();
 
-        }
-        activitiesInTrace.remove(0);
+		}
+		activitiesInTrace.remove(0);
 
-        Set<String> firstActivityOccurrence = new HashSet<>();
+		Set<String> firstActivityOccurrence = new HashSet<>();
 
-        for(int i = 0; i < activitiesInTrace.size(); i++){
-            String activityToAdjust = activitiesInTrace.get(i);
-            activityDecoration = extendedDFG.getActivityDecoration(activitiesInTrace.get(i));
-            boolean firstOccurrenceOfActivity = firstActivityOccurrence.add(activityToAdjust);
-            if (activityName.equals(activityToAdjust) && firstOccurrenceOfActivity){
-                activityDecoration.incrementNumFirstObservations();
-            }
-            activityDecoration.decrementDecorations(firstOccurrenceOfActivity);
+		for (int i = 0; i < activitiesInTrace.size(); i++) {
+			String activityToAdjust = activitiesInTrace.get(i);
+			activityDecoration = extendedDFG.getActivityDecoration(activitiesInTrace.get(i));
+			boolean firstOccurrenceOfActivity = firstActivityOccurrence.add(activityToAdjust);
+			if (activityName.equals(activityToAdjust) && firstOccurrenceOfActivity) {
+				activityDecoration.incrementNumFirstObservations();
+			}
+			activityDecoration.decrementDecorations(firstOccurrenceOfActivity);
 
-        }
-    }
-    private void removeTrace(String traceId){
+		}
+	}
 
-        while (observedActivitiesInTrace.get(traceId).size()>0){
-            removeFirstActivity(traceId);
-        }
-        observedActivitiesInTrace.remove(traceId);
+	private void removeTrace(String traceId) {
 
-    }
-    @Override
-    public void saveLog(String fileName) {
-        
-        DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
+		while (observedActivitiesInTrace.get(traceId).size() > 0) {
+			removeFirstActivity(traceId);
+		}
+		observedActivitiesInTrace.remove(traceId);
 
-        DocumentBuilder documentBuilder = null;
-        try {
-            documentBuilder = documentFactory.newDocumentBuilder();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        }
+	}
 
-        Document document = documentBuilder.newDocument();
+	@Override
+	public void saveLog(String fileName) {
 
-        Element root = document.createElement("log");
-        document.appendChild(root);
+		DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 
-        observedActivitiesInTrace.forEach((key, value) -> {
-            Element trace = document.createElement("trace");
-            Element traceString = document.createElement("string");
-            traceString.setAttribute("key","concept:name");
-            traceString.setAttribute("value",key);
-            trace.appendChild(traceString);
-            for (String activityName : value){
-                Element event = document.createElement("event");
-                Element eventString = document.createElement("string");
-                eventString.setAttribute("key","concept:name");
-                eventString.setAttribute("value",activityName);
-                event.appendChild(eventString);
+		DocumentBuilder documentBuilder = null;
+		try {
+			documentBuilder = documentFactory.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		}
 
-                trace.appendChild(event);
+		Document document = documentBuilder.newDocument();
 
-            }
-            root.appendChild(trace);
-        });
+		Element root = document.createElement("log");
+		document.appendChild(root);
 
+		observedActivitiesInTrace.forEach((key, value) -> {
+			Element trace = document.createElement("trace");
+			Element traceString = document.createElement("string");
+			traceString.setAttribute("key", "concept:name");
+			traceString.setAttribute("value", key);
+			trace.appendChild(traceString);
+			for (String activityName : value) {
+				Element event = document.createElement("event");
+				Element eventString = document.createElement("string");
+				eventString.setAttribute("key", "concept:name");
+				eventString.setAttribute("value", activityName);
+				event.appendChild(eventString);
 
-        try {
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            DOMSource domSource = new DOMSource(document);
-            StreamResult streamResult = new StreamResult(new File(fileName + ".xes"));
-            transformer.transform(domSource, streamResult);
-        } catch (TransformerException e) {
-            System.out.println(e);
-            e.printStackTrace();
-        }
+				trace.appendChild(event);
 
-    }
+			}
+			root.appendChild(trace);
+		});
 
-    @Override
-    public int getNumberEventsSaved() {
-        int observedEvents = 0;
-        for(Map.Entry<String,List<String>> trace : observedActivitiesInTrace.entrySet()){
-            observedEvents += trace.getValue().size();
-        }
-        return observedEvents;
-    }
+		try {
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			DOMSource domSource = new DOMSource(document);
+			StreamResult streamResult = new StreamResult(new File(fileName + ".xes"));
+			transformer.transform(domSource, streamResult);
+		} catch (TransformerException e) {
+			System.out.println(e);
+			e.printStackTrace();
+		}
+
+	}
+
+	@Override
+	public int getNumberEventsSaved() {
+		int observedEvents = 0;
+		for (Map.Entry<String, List<String>> trace : observedActivitiesInTrace.entrySet()) {
+			observedEvents += trace.getValue().size();
+		}
+		return observedEvents;
+	}
 }

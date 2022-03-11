@@ -9,29 +9,24 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Set;
 
-@ExposedDcrPattern(
-        name = "Response",
-        dependencies = {}
-)
+@ExposedDcrPattern(name = "Response", dependencies = {})
 public class Response implements RelationPattern {
 
-    @Override
-    public void populateConstraint(UnionRelationSet unionRelationSet) {
+	@Override
+	public void populateConstraint(UnionRelationSet unionRelationSet) {
 
-        Set<Pair<String, String>> dfgRelations = unionRelationSet.getDFGRelations();
-        for (Pair<String, String> relation : dfgRelations) {
-            String source = relation.getLeft();
-            double avgIndexSource =
-                    unionRelationSet.getActivityDecoration(source).getAverageIndex();
+		Set<Pair<String, String>> dfgRelations = unionRelationSet.getDFGRelations();
+		for (Pair<String, String> relation : dfgRelations) {
+			String source = relation.getLeft();
+			double avgIndexSource = unionRelationSet.getActivityDecoration(source).getAverageIndex();
 
-            String target = relation.getRight();
-            double avgIndexTarget =
-                    unionRelationSet.getActivityDecoration(target).getAverageIndex();
+			String target = relation.getRight();
+			double avgIndexTarget = unionRelationSet.getActivityDecoration(target).getAverageIndex();
 
-            if (avgIndexSource < avgIndexTarget) {
-                unionRelationSet.addDcrRelation(Triple.of(source, target, DcrModel.RELATION.RESPONSE));
-            }
+			if (avgIndexSource < avgIndexTarget) {
+				unionRelationSet.addDcrRelation(Triple.of(source, target, DcrModel.RELATION.RESPONSE));
+			}
 
-        }
-    }
+		}
+	}
 }
