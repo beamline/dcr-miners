@@ -34,11 +34,10 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 	private StreamMiner streamMiner;
 	private UnionRelationSet unionRelationSet;
 	private Integer relationsThreshold = 10;
-	private String[] transReductionList = new String[] { "Condition", "Response" };
+	private RELATION[] transReductionList = new RELATION[] { RELATION.CONDITION, RELATION.RESPONSE };
 
 	private String[] dcrPatternList = new String[] { "Condition", "Response", "Exclude", "Include" };
-	private RELATION[] dcrConstraintList = new RELATION[] { RELATION.CONDITION, RELATION.RESPONSE, RELATION.EXCLUDE,
-			RELATION.INCLUDE };
+	private RELATION[] dcrConstraintList = new RELATION[] { RELATION.CONDITION, RELATION.RESPONSE, RELATION.EXCLUDE, RELATION.INCLUDE };
 	private Set<String> postorderTraversal;
 
 	public DFGBasedMiner() {
@@ -74,7 +73,7 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 		this.streamMiner = type;
 	}
 
-	public void setTransitiveReductionList(String[] transReductionList) {
+	public void setTransitiveReductionList(RELATION... transReductionList) {
 		this.transReductionList = transReductionList;
 	}
 
@@ -86,8 +85,13 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 		this.dcrConstraintList = dcrConstraintList;
 	}
 
-	public void configureSlidingWindowStrategy(String[] dcrPatternList, int maxTraceSize, int maxTraces,
-			String[] transitiveReductionList, int relationsThreshold, RELATION[] dcrConstraints)
+	public void configureSlidingWindowStrategy(
+			String[] dcrPatternList,
+			int maxTraceSize,
+			int maxTraces,
+			RELATION[] transitiveReductionList,
+			int relationsThreshold,
+			RELATION[] dcrConstraints)
 			throws PatternUnknownException {
 		setDcrPatternsForMining(dcrPatternList);
 		setStreamMinerType(new SlidingWindowStreamMiner(maxTraceSize, maxTraces));
@@ -96,8 +100,11 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 		setDcrConstraintsForVisualization(dcrConstraints);
 	}
 
-	public void configureUnlimitedMemoryStrategy(String[] dcrPatternList, String[] transitiveReductionList,
-			int relationsThreshold, RELATION[] dcrConstraints) throws PatternUnknownException {
+	public void configureUnlimitedMemoryStrategy(
+			String[] dcrPatternList,
+			RELATION[] transitiveReductionList,
+			int relationsThreshold,
+			RELATION[] dcrConstraints) throws PatternUnknownException {
 		setDcrPatternsForMining(dcrPatternList);
 		setStreamMinerType(new UnlimitedStreamMiner());
 		setTransitiveReductionList(transitiveReductionList);
@@ -126,9 +133,7 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 		}
 
 		TransitiveReduction transitiveReduction = new TransitiveReduction();
-
-		for (String transReduce : transReductionList) {
-			RELATION enumPattern = RELATION.valueOf(transReduce.toUpperCase());
+		for (RELATION enumPattern : transReductionList) {
 			transitiveReduction.reduce(unionRelationSet, enumPattern);
 		}
 
