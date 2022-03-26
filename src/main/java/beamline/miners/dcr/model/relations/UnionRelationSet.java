@@ -6,12 +6,14 @@ import org.apache.commons.lang3.tuple.Triple;
 import beamline.miners.dcr.model.relations.dfg.ActivityDecoration;
 import beamline.miners.dcr.model.relations.dfg.ExtendedDFG;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class UnionRelationSet {
+public class UnionRelationSet implements Serializable {
 
+	private static final long serialVersionUID = 7275698575797429700L;
 	private final Integer threshold;
 	private ExtendedDFG extendedDFG;
 	private Set<Triple<String, String, DcrModel.RELATION>> DcrRelations = new HashSet<>();

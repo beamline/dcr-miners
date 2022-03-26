@@ -8,10 +8,8 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.deckfour.xes.extension.std.XConceptExtension;
-import org.deckfour.xes.model.XTrace;
-import org.reflections.Reflections;
 
+import beamline.events.BEvent;
 import beamline.miners.dcr.annotations.ExposedDcrPattern;
 import beamline.miners.dcr.exceptions.PatternUnknownException;
 import beamline.miners.dcr.model.TransitiveReduction;
@@ -25,9 +23,9 @@ import beamline.miners.dcr.model.streamminers.StreamMiner;
 import beamline.miners.dcr.model.streamminers.UnlimitedStreamMiner;
 import beamline.models.algorithms.StreamMiningAlgorithm;
 
-public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
+public class DFGBasedMiner extends StreamMiningAlgorithm<DcrModel> {
 
-	private Reflections reflections;
+	private static final long serialVersionUID = 4226843984612962011L;
 	private Set<Class<?>> dcrPatternClasses;
 	private DcrModel cached;
 
@@ -39,17 +37,22 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 	private String[] dcrPatternList = new String[] { "Condition", "Response", "Exclude", "Include" };
 	private RELATION[] dcrConstraintList = new RELATION[] { RELATION.CONDITION, RELATION.RESPONSE, RELATION.EXCLUDE, RELATION.INCLUDE };
 	private Set<String> postorderTraversal;
+	
+	private int modelRefreshRate = 10;
 
-	public DFGBasedMiner() {
-		this.reflections = new Reflections("beamline");
-		this.dcrPatternClasses = reflections.getTypesAnnotatedWith(ExposedDcrPattern.class);
-
+	public DFGBasedMiner(Set<Class<?>> dcrPatternClasses) {
+		this.dcrPatternClasses = dcrPatternClasses;
 		this.streamMiner = new UnlimitedStreamMiner();
 	}
 
-	public DFGBasedMiner(int maxEvents, int maxTraces) {
-		this();
+	public DFGBasedMiner(Set<Class<?>> dcrPatternClasses, int maxEvents, int maxTraces) {
+		this(dcrPatternClasses);
 		this.streamMiner = new SlidingWindowStreamMiner(maxEvents, maxTraces);
+	}
+
+	public DFGBasedMiner setModelRefreshRate(int modelRefreshRate) {
+		this.modelRefreshRate = modelRefreshRate;
+		return this;
 	}
 
 	/**
@@ -113,12 +116,16 @@ public class DFGBasedMiner extends StreamMiningAlgorithm<XTrace, DcrModel> {
 	}
 
 	@Override
-	public DcrModel ingest(XTrace event) {
-		String caseID = XConceptExtension.instance().extractName(event);
-		String activityName = XConceptExtension.instance().extractName(event.get(0));
+	public DcrModel ingest(BEvent event) {
+		String caseID = event.getTraceName();
+		String activityName = event.getEventName();
 
 		this.streamMiner.observeEvent(caseID, activityName);
-		return cached;
+		if (getProcessedEvents() % modelRefreshRate == 0) {
+			return getDcrModel();
+		}
+		
+		return null;
 	}
 
 	public DcrModel convert(ExtendedDFG dfg) throws IllegalAccessException, InstantiationException {

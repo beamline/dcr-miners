@@ -1,13 +1,15 @@
 package beamline.miners.dcr.model.relations.dfg;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class ExtendedDFG {
+public class ExtendedDFG implements Serializable {
 
+	private static final long serialVersionUID = 4764357547298515886L;
 	private Map<String, ActivityDecoration> activities;
 	private Map<Pair<String, String>, RelationDecoration> relations;
 
