@@ -6,6 +6,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Triple;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -107,6 +111,20 @@ public class DcrModel extends Response {
 
 	public Set<Triple<String, String, DcrModel.RELATION>> getDcrRelationWithConstraint(DcrModel.RELATION constraint) {
 		return relations.stream().filter(entry -> entry.getRight() == constraint).collect(Collectors.toSet());
+	}
+
+	public void loadFromJSON(String JSONPath) throws IOException, ParseException {
+		JSONParser parser = new JSONParser();
+		Reader reader = new FileReader(JSONPath);
+		JSONObject jsonObject = (JSONObject) parser.parse(reader);
+		JSONArray relationList = (JSONArray) jsonObject.get("Relation");
+		for (Object o : relationList) {
+			JSONObject relation = (JSONObject) o;
+			String source = (String) relation.get("source");
+			String target = (String) relation.get("target");
+			DcrModel.RELATION relationType = DcrModel.RELATION.valueOf(((String) relation.get("type")).toUpperCase());
+			addRelation(Triple.of(source, target, relationType));
+		}
 	}
 
 	public void loadModel(String xmlGraphPath) throws ParserConfigurationException, IOException, SAXException {
